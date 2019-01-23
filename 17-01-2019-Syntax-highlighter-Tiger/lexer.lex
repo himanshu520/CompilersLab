@@ -10,6 +10,7 @@ structure Tokens = struct
                      WHITESPACE of string * int * int;
 end;
 
+val inString = ref 0;
 val prevLineNum = ref 0;
 val lineNum = ref 1;
 val prevCharNum = ref 0;
@@ -17,13 +18,17 @@ val charNum = ref 1;
 val commentCnt = ref 0;
 
 type lexresult = Tokens.token;
-fun eof () = if !commentCnt > 0 then (print ("improper comments"); Tokens.EOF (0, 0)) else Tokens.EOF(0, 0);
+fun eof () = if !commentCnt > 0 then (print ("improper comments\n"); Tokens.EOF (0, 0)) else 
+             if !inString > 0 then (print ("improper string\n"); Tokens.EOF(0, 0)) else
+             (print ("\n"); Tokens.EOF(0, 0));
 %%
 
 alpha = [a-zA-z];
 digits = [0-9];
 ws = [\t\ ];
 %s COMMENT;
+%s STRING;
+%s MULTILINE_STRING;
 %%
 
 <INITIAL> \n                                =>    ( prevLineNum := !lineNum; 
@@ -52,7 +57,39 @@ ws = [\t\ ];
 <COMMENT> [*(]                              =>    ( prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
                                                     Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
-<COMMENT> [^*\n(]*                           =>    ( prevCharNum := !charNum;
+<COMMENT> [^*\n(]*                          =>    ( prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
                                                     Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
-.                                           =>    ( print ("illegal character"); continue() );  
+<INITIAL> \"                                =>    ( YYBEGIN STRING;
+                                                    inString := 1;
+                                                    prevCharNum := !charNum;
+                                                    charNum := !charNum + size yytext;
+                                                    Tokens.STRING (yytext, !lineNum, !prevCharNum) );
+<STRING> [^\\"\n]*                          =>    ( prevCharNum := !charNum;
+                                                    charNum := !charNum + size yytext;
+                                                    Tokens.STRING (yytext, !lineNum, !prevCharNum) );
+<STRING> \\ (n | t | \^{alpha} | {digits}{digits}{digits} | \" | \\)
+                                            =>    ( prevCharNum := !charNum;
+                                                    charNum := !charNum + size yytext;
+                                                    Tokens.ESCAPE (yytext, !lineNum, !prevCharNum) );
+<STRING> \\{ws}*\n                          =>    ( YYBEGIN MULTILINE_STRING;
+                                                    prevLineNum := !lineNum;
+                                                    prevCharNum := !charNum;
+                                                    lineNum := !lineNum + 1;
+                                                    charNum := 1;
+                                                    Tokens.ESCAPE (yytext, !prevLineNum, !prevCharNum) );
+<MULTILINE_STRING> {ws}*\n                  =>    ( prevLineNum := !lineNum;
+                                                    prevCharNum := !charNum;
+                                                    lineNum := !lineNum + 1;
+                                                    charNum := 1;
+                                                    Tokens.ESCAPE (yytext, !prevLineNum, !prevCharNum) );
+<MULTILINE_STRING> {ws}*\\                  =>    ( YYBEGIN STRING;
+                                                    prevCharNum := !charNum;
+                                                    charNum := !charNum + size yytext;
+                                                    Tokens.ESCAPE (yytext, !lineNum, !prevCharNum) );
+<STRING> \"                                 =>    ( YYBEGIN INITIAL;
+                                                    inString := 0;
+                                                    prevCharNum := !charNum;
+                                                    charNum := !charNum + size yytext;
+                                                    Tokens.STRING (yytext, !lineNum, !prevCharNum) );
+.                                           =>    ( print ("illegal character"); continue() );

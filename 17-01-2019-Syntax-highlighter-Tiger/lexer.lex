@@ -57,7 +57,7 @@ ws = [\t\ ];
 <COMMENT> [*/]                              =>    ( prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
                                                     Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
-<COMMENT> [^*\n/]*                          =>    ( prevCharNum := !charNum;
+<COMMENT> [^*\n/]+                          =>    ( prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
                                                     Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
 <INITIAL> \"                                =>    ( YYBEGIN STRING;
@@ -65,7 +65,7 @@ ws = [\t\ ];
                                                     prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
                                                     Tokens.STRING (yytext, !lineNum, !prevCharNum) );
-<STRING> [^\\"\n]*                          =>    ( prevCharNum := !charNum;
+<STRING> [^\\"\n]+                          =>    ( prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
                                                     Tokens.STRING (yytext, !lineNum, !prevCharNum) );
 <STRING> \\ (n | t | \^{alpha} | {digits}{digits}{digits} | \" | \\)

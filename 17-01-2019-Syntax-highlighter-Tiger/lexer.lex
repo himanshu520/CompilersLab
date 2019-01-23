@@ -23,7 +23,7 @@ fun eof () = if !commentCnt > 0 then (print ("improper comments\n"); Tokens.EOF 
              (print ("\n"); Tokens.EOF(0, 0));
 %%
 
-alpha = [a-zA-z];
+alpha = [a-zA-Z];
 digits = [0-9];
 ws = [\t\ ];
 %s COMMENT;

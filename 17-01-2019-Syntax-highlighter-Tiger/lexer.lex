@@ -10,14 +10,14 @@ structure Tokens = struct
                      WHITESPACE of string * int * int;
 end;
 
-type lexresult = Tokens.token;
-fun eof () = Tokens.EOF (0, 0);
-
 val prevLineNum = ref 0;
 val lineNum = ref 1;
 val prevCharNum = ref 0;
 val charNum = ref 1;
 val commentCnt = ref 0;
+
+type lexresult = Tokens.token;
+fun eof () = if !commentCnt > 0 then (print ("improper comments"); Tokens.EOF (0, 0)) else Tokens.EOF(0, 0);
 %%
 
 alpha = [a-zA-z];
@@ -40,10 +40,19 @@ ws = [\t\ ];
                                                     charNum := !charNum + size yytext;
                                                     Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
 <COMMENT> "*)"                              =>    ( commentCnt := !commentCnt - 1;
-                                                    if !commentCnt = 0 then (YYBEGIN INITIAL) else 
-                                                        if !commentCnt > 0 then (YYBEGIN COMMENT) 
-                                                        else (print ("illegal comment"); !commentCnt = 0; YYBEGIN INITIAL);
+                                                    if !commentCnt = 0 then (YYBEGIN INITIAL) else (YYBEGIN COMMENT);
                                                     prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
-                                                    Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );                                                    
+                                                    Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
+<COMMENT> \n                                =>    ( prevLineNum := !lineNum; 
+                                                    prevCharNum := !charNum;
+                                                    lineNum := !lineNum + 1;
+                                                    charNum := 1;
+                                                    Tokens.COMMENT (yytext, !prevLineNum, !prevCharNum) );
+<COMMENT> [*(]                              =>    ( prevCharNum := !charNum;
+                                                    charNum := !charNum + size yytext;
+                                                    Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
+<COMMENT> [^*\n(]*                           =>    ( prevCharNum := !charNum;
+                                                    charNum := !charNum + size yytext;
+                                                    Tokens.COMMENT (yytext, !lineNum, !prevCharNum) );
 .                                           =>    ( print ("illegal character"); continue() );  

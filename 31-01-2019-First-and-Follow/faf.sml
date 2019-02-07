@@ -1,17 +1,17 @@
-type RHS = Atom.atom list
+type RHS = Atom.atom list;
 
 structure RHS_KEY = struct
 	type ord_key = RHS
 	val compare = List.collate Atom.lexCompare
 end;
 
-structure RHSSet = RedBlackSetFn (RHS_KEY)
+structure RHSSet = RedBlackSetFn (RHS_KEY);
 
-type Productions = RHSSet.set
+type Productions = RHSSet.set;
 
-type Rules = Productions AtomMap.map
+type Rules = Productions AtomMap.map;
 
-type Grammar = { symbols : AtomSet.set, tokens : AtomSet.set, rules : Rules }
+type Grammar = { symbols : AtomSet.set, tokens : AtomSet.set, rules : Rules };
 
 
 val sym = ref AtomSet.empty;
@@ -43,3 +43,35 @@ rule := AtomMap.insert (!rule, Atom.atom "T", !T_);
 rule := AtomMap.insert (!rule, Atom.atom "F", !F_);
 
 val grammar : Grammar = { symbols = !sym, tokens = !tok, rules = !rule }
+
+val nullable : Atom.atom list ref = ref nil;
+
+fun check_nullable_single x = if Atom.compare (x, Atom.atom "EPS") = EQUAL then true
+							  else if AtomSet.member (#tokens grammar, x) then false
+							  else let fun cmp y = Atom.compare (x, y) = EQUAL in 
+							  			List.exists cmp (!nullable)
+									end;
+
+fun check_nullable_prod (x::xs) = if not (check_nullable_single x) then false else check_nullable_prod xs
+|	check_nullable_prod _ = true;
+
+fun check_nullable_rule (x::xs) = if check_nullable_prod x then true else check_nullable_rule xs
+| 	check_nullable_rule _ = false;
+
+fun check_nullable_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#rules grammar, x)) in
+									check_nullable_rule rl
+								end;
+
+val cont = ref false;
+fun check_nullable_symbols (x::xs) = (if check_nullable_symbol x then (nullable := x :: !nullable;
+																	   cont := true)
+									else (); check_nullable_symbols xs)
+|	check_nullable_symbols _ = ();
+
+fun find_nullable () = (cont := false; check_nullable_symbols (AtomSet.listItems (#symbols grammar));
+						if !cont then find_nullable () else ());
+
+fun print_list (x::xs) = (TextIO.print ((Atom.toString x) ^ "\n"); print_list xs)
+|	print_list _ = (TextIO.print "Done\n");
+
+print_list (!nullable);

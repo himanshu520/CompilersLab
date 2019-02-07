@@ -114,9 +114,7 @@ fun find_first_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#rules 
 fun find_first_symbols (x::xs) = (find_first_symbol x; find_first_symbols xs)
 |	find_first_symbols _ = ();
 
-val cnt = ref 0;
-
-fun find_first () = (cnt := !cnt + 1; TextIO.print (Int.toString (!cnt)); cont := false; find_first_symbols (AtomSet.listItems (#symbols grammar));
+fun find_first () = (cont := false; find_first_symbols (AtomSet.listItems (#symbols grammar));
 						if (!cont) then find_first () else ());
 
 
@@ -129,3 +127,50 @@ fun print_map y = let fun prn ((x::xs) : (Atom.atom * (AtomSet.set ref)) list) =
 
 find_first ();
 print_map (!first);	
+
+
+
+val follow : (AtomSet.set ref) AtomMap.map ref = ref AtomMap.empty;
+
+fun init_follow () = let fun temp (x::xs) = (follow := AtomMap.insert (!follow, x, ref AtomSet.empty); temp xs)
+                            |   temp _ = () in
+                        temp (AtomSet.listItems (#symbols grammar))
+                    end;
+
+init_follow ();
+
+fun add_follow_symbol y x (xs::xss) = (let val fst_xs = if AtomSet.member (#tokens grammar, xs) then AtomSet.add (AtomSet.empty, xs)
+									   					else !(AtomMap.lookup (!first, xs))
+												val foll_x = !(AtomMap.lookup (!follow, x)) in
+											if AtomSet.isSubset (fst_xs, foll_x) then ()
+											else (cont := true; AtomMap.lookup (!follow, x) := AtomSet.union (fst_xs, foll_x))
+										end;
+										if member_list (!nullable) xs then add_follow_symbol y x xss else ())
+| 	add_follow_symbol y x _ = let val foll_y = !(AtomMap.lookup (!follow, y)) 
+										val foll_x = !(AtomMap.lookup (!follow, x)) in
+									if AtomSet.isSubset (foll_y, foll_x) then ()
+									else (cont := true; AtomMap.lookup (!follow, x) := AtomSet.union (foll_x, foll_y))
+								end;
+
+fun find_follow_prod y (x::xs) = (if AtomSet.member (#symbols grammar, x) then add_follow_symbol y x xs else ();
+								  find_follow_prod y xs)
+|	find_follow_prod _ _ = ();
+
+fun find_follow_rule y (x::xs) = (find_follow_prod y x; find_follow_rule y xs)
+| 	find_follow_rule _ _ = ();
+
+fun find_follow_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#rules grammar, x)) in
+							 	find_follow_rule x rl
+							end;
+
+fun find_follow_symbols (x::xs) = (find_follow_symbol x; find_follow_symbols xs)
+|	find_follow_symbols _ = ();
+
+val cnt = ref 0;
+
+fun find_follow () = (cnt := !cnt + 1; TextIO.print (Int.toString (!cnt)); cont := false; find_follow_symbols (AtomSet.listItems (#symbols grammar));
+						if (!cont) then find_follow () else ());
+
+
+find_follow ();
+print_map (!follow);	

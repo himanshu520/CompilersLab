@@ -46,11 +46,13 @@ val grammar : Grammar = { symbols = !sym, tokens = !tok, rules = !rule }
 
 val nullable : Atom.atom list ref = ref nil;
 
+fun member_list lst x = let fun cmp y = Atom.compare (x, y) = EQUAL in
+                            List.exists cmp lst
+                        end
+
 fun check_nullable_single x = if Atom.compare (x, Atom.atom "EPS") = EQUAL then true
 							  else if AtomSet.member (#tokens grammar, x) then false
-							  else let fun cmp y = Atom.compare (x, y) = EQUAL in 
-							  			List.exists cmp (!nullable)
-									end;
+							       else member_list (!nullable) x;
 
 fun check_nullable_prod (x::xs) = if not (check_nullable_single x) then false else check_nullable_prod xs
 |	check_nullable_prod _ = true;
@@ -63,13 +65,18 @@ fun check_nullable_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#ru
 								end;
 
 val cont = ref false;
-fun check_nullable_symbols (x::xs) = (if check_nullable_symbol x then (nullable := x :: !nullable;
-																	   cont := true)
-									else (); check_nullable_symbols xs)
+val cnt = ref 0;
+fun check_nullable_symbols (x::xs) = (if member_list (!nullable) x then () 
+                                      else if check_nullable_symbol x then (nullable := x :: !nullable;
+																            cont := true)
+									       else (); 
+                                      check_nullable_symbols xs)
 |	check_nullable_symbols _ = ();
 
-fun find_nullable () = (cont := false; check_nullable_symbols (AtomSet.listItems (#symbols grammar));
-						if !cont then find_nullable () else ());
+fun find_nullable () = (cnt := !cnt + 1; TextIO.print (Int.toString (!cnt)); cont := false; check_nullable_symbols (AtomSet.listItems (#symbols grammar));
+						if (!cont) then find_nullable () else ());
+
+find_nullable ();
 
 fun print_list (x::xs) = (TextIO.print ((Atom.toString x) ^ "\n"); print_list xs)
 |	print_list _ = (TextIO.print "Done\n");

@@ -65,7 +65,7 @@ fun check_nullable_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#ru
 								end;
 
 val cont = ref false;
-val cnt = ref 0;
+
 fun check_nullable_symbols (x::xs) = (if member_list (!nullable) x then () 
                                       else if check_nullable_symbol x then (nullable := x :: !nullable;
 																            cont := true)
@@ -73,7 +73,7 @@ fun check_nullable_symbols (x::xs) = (if member_list (!nullable) x then ()
                                       check_nullable_symbols xs)
 |	check_nullable_symbols _ = ();
 
-fun find_nullable () = (cnt := !cnt + 1; TextIO.print (Int.toString (!cnt)); cont := false; check_nullable_symbols (AtomSet.listItems (#symbols grammar));
+fun find_nullable () = (cont := false; check_nullable_symbols (AtomSet.listItems (#symbols grammar));
 						if (!cont) then find_nullable () else ());
 
 find_nullable ();
@@ -82,3 +82,50 @@ fun print_list (x::xs) = (TextIO.print ((Atom.toString x) ^ "\n"); print_list xs
 |	print_list _ = (TextIO.print "Done\n");
 
 print_list (!nullable);
+
+
+val first : (AtomSet.set ref) AtomMap.map ref = ref AtomMap.empty;
+
+fun init_first () = let fun temp (x::xs) = (first := AtomMap.insert (!first, x, ref AtomSet.empty); temp xs)
+                            |   temp _ = () in
+                        temp (AtomSet.listItems (#symbols grammar))
+                    end;
+
+init_first ();
+
+fun add_first_symbol y x = let val fst_x = if AtomSet.member (#tokens grammar, x) then AtomSet.add (AtomSet.empty, x)
+                                           else if Atom.same (x, Atom.atom "EPS") then AtomSet.empty
+										   else !(AtomMap.lookup (!first, x))
+							   		val fst_y = !(AtomMap.lookup (!first, y)) in
+							   if AtomSet.isSubset (fst_x, fst_y) then () 
+							   else (cont := true; AtomMap.lookup (!first, y) := AtomSet.union(fst_x, fst_y))
+							end;
+
+fun find_first_prod y (x::xs) = (add_first_symbol y x; if member_list (!nullable) x then find_first_prod y xs else ())
+|	find_first_prod _ _ = ();
+
+fun find_first_rule y (x::xs) = (find_first_prod y x; find_first_rule y xs)
+| 	find_first_rule _ _ = ();
+
+fun find_first_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#rules grammar, x)) in
+							 	find_first_rule x rl
+							end;
+
+fun find_first_symbols (x::xs) = (find_first_symbol x; find_first_symbols xs)
+|	find_first_symbols _ = ();
+
+val cnt = ref 0;
+
+fun find_first () = (cnt := !cnt + 1; TextIO.print (Int.toString (!cnt)); cont := false; find_first_symbols (AtomSet.listItems (#symbols grammar));
+						if (!cont) then find_first () else ());
+
+
+fun print_set x = print_list (AtomSet.listItems x);
+fun print_map y = let fun prn ((x::xs) : (Atom.atom * (AtomSet.set ref)) list) = (TextIO.print ("Printing for symbol " ^ (Atom.toString (#1 x)) ^ ":-\n");
+											print_set (!(#2 x)); prn xs)
+					  |	  prn _ = () in
+					  prn (AtomMap.listItemsi y)
+				   	end;
+
+find_first ();
+print_map (!first);	

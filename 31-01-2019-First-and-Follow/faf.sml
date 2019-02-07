@@ -35,3 +35,11 @@ val F_ = ref RHSSet.empty;
 F_ := RHSSet.add (!F_, [Atom.atom "id"]);
 F_ := RHSSet.add (!F_, [Atom.atom "num"]);	
 F_ := RHSSet.add (!F_, [Atom.atom "(", Atom.atom "E", Atom.atom ")"]);
+
+val rule : Rules ref = ref AtomMap.empty;
+rule := AtomMap.insert (!rule, Atom.atom "S", !S_);
+rule := AtomMap.insert (!rule, Atom.atom "E", !E_);
+rule := AtomMap.insert (!rule, Atom.atom "T", !T_);
+rule := AtomMap.insert (!rule, Atom.atom "F", !F_);
+
+val grammar : Grammar = { symbols = !sym, tokens = !tok, rules = !rule }

@@ -1,58 +1,62 @@
-type RHS = Atom.atom list;
-
-structure RHS_KEY = struct
-	type ord_key = RHS
-	val compare = List.collate Atom.lexCompare
-end;
-
-structure RHSSet = RedBlackSetFn (RHS_KEY);
-
-type Productions = RHSSet.set;
-
-type Rules = Productions AtomMap.map;
-
-type Grammar = { symbols : AtomSet.set, tokens : AtomSet.set, rules : Rules };
+(* This file contains the code to find the NULLABLE symbols and the FIRST and FOLLOW sets of all the symbols in the grammar
+   defined in the file grammar.sml. *)
 
 
-val sym = ref AtomSet.empty;
-sym := AtomSet.addList (!sym, [Atom.atom "S", Atom.atom "E", Atom.atom "T", Atom.atom "F"]);
-
-val tok = ref AtomSet.empty;
-tok := AtomSet.addList (!tok, [Atom.atom "num", Atom.atom "id", Atom.atom "(", Atom.atom ")", Atom.atom "*", Atom.atom "+", Atom.atom "$"]);
-
-val S_ = ref RHSSet.empty;
-S_ := RHSSet.add (!S_, [Atom.atom "E", Atom.atom "$"]);
-
-val E_ = ref RHSSet.empty;
-E_ := RHSSet.add (!E_, [Atom.atom "E", Atom.atom "+", Atom.atom "T"]);
-E_ := RHSSet.add (!E_, [Atom.atom "T"]);
-
-val T_ = ref RHSSet.empty;
-T_ := RHSSet.add (!T_, [Atom.atom "T", Atom.atom "*", Atom.atom "F"]);
-T_ := RHSSet.add (!T_, [Atom.atom "F"]);
-
-val F_ = ref RHSSet.empty;
-F_ := RHSSet.add (!F_, [Atom.atom "id"]);
-F_ := RHSSet.add (!F_, [Atom.atom "num"]);	
-F_ := RHSSet.add (!F_, [Atom.atom "(", Atom.atom "E", Atom.atom ")"]);
-
-val rule : Rules ref = ref AtomMap.empty;
-rule := AtomMap.insert (!rule, Atom.atom "S", !S_);
-rule := AtomMap.insert (!rule, Atom.atom "E", !E_);
-rule := AtomMap.insert (!rule, Atom.atom "T", !T_);
-rule := AtomMap.insert (!rule, Atom.atom "F", !F_);
-
-val grammar : Grammar = { symbols = !sym, tokens = !tok, rules = !rule }
-
+(* Set of atoms to store all the nullable symbols. *)
 val nullable : Atom.atom list ref = ref nil;
 
-fun member_list lst x = let fun cmp y = Atom.compare (x, y) = EQUAL in
-                            List.exists cmp lst
-                        end
+(* Map of sets of atoms to store the FIRST and FOLLOW sets corresponding to each symbol in the grammar. *)
+val first : (AtomSet.set ref) AtomMap.map ref = ref AtomMap.empty;
+val follow : (AtomSet.set ref) AtomMap.map ref = ref AtomMap.empty;
+
+(* Function to initialise a map variable (map of sets of atoms described above) with empty set correspoding to each symbol 
+   in the grammar. 
+   Then using the function to initialise first and follow maps. *)
+fun init mp = let fun insert_map_symbol (x::xs) = (mp := AtomMap.insert (!mp, x, ref AtomSet.empty); insert_map_symbol xs)
+                            |   insert_map_symbol _ = () in
+                        insert_map_symbol (AtomSet.listItems (#symbols grammar))
+                    end;
+init first;
+init follow;
+
+
+
+(* Defining some helper functions. *)
+
+(* Function to check whether whether an atom is a member of an atom list. *)
+fun member_atom_list lst x = let fun cmp y = Atom.compare (x, y) = EQUAL in
+                            		List.exists cmp lst
+                        		end
+
+(* Function to print an atom list. *)
+fun print_atom_list (x::xs::xss) = (TextIO.print ((Atom.toString x) ^ ",\t"); print_atom_list (xs::xss))
+| 	print_atom_list (x::xs) = (TextIO.print ((Atom.toString x) ^ "."); print_atom_list xs)
+|	print_atom_list _ = (TextIO.print "\n");
+
+(* Function to print an atom set *)
+fun print_atom_set x = print_atom_list (AtomSet.listItems x);
+
+(* Function to print a map of type ((AtomSet.set ref) AtomMap.map) *)
+fun print_atom_atomset_map y = let fun print_atom_atomset_list ((x::xs) : (Atom.atom * (AtomSet.set ref)) list) = (TextIO.print ((Atom.toString (#1 x)) ^ " :-\t");
+																												   print_atom_set (!(#2 x)); 
+																												   print_atom_atomset_list xs)
+					  			   		|   print_atom_atomset_list _ = () in
+					  				print_atom_atomset_list (AtomMap.listItemsi y)
+				   				end;
+
+
+
+(* A reference variable to keep track of whether the calculation of FIRST, FOLLOW and NULLABLE has reached its fixed point. *)
+val cont = ref false;
+
+
+
+(* Implementation of NULLABLE. 
+   Use "find_nullable ()" to get the list of nullables. *)
 
 fun check_nullable_single x = if Atom.compare (x, Atom.atom "EPS") = EQUAL then true
 							  else if AtomSet.member (#tokens grammar, x) then false
-							       else member_list (!nullable) x;
+							       else member_atom_list (!nullable) x;
 
 fun check_nullable_prod (x::xs) = if not (check_nullable_single x) then false else check_nullable_prod xs
 |	check_nullable_prod _ = true;
@@ -64,9 +68,7 @@ fun check_nullable_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#ru
 									check_nullable_rule rl
 								end;
 
-val cont = ref false;
-
-fun check_nullable_symbols (x::xs) = (if member_list (!nullable) x then () 
+fun check_nullable_symbols (x::xs) = (if member_atom_list (!nullable) x then () 
                                       else if check_nullable_symbol x then (nullable := x :: !nullable;
 																            cont := true)
 									       else (); 
@@ -76,22 +78,11 @@ fun check_nullable_symbols (x::xs) = (if member_list (!nullable) x then ()
 fun find_nullable () = (cont := false; check_nullable_symbols (AtomSet.listItems (#symbols grammar));
 						if (!cont) then find_nullable () else ());
 
-find_nullable ();
-
-fun print_list (x::xs) = (TextIO.print ((Atom.toString x) ^ "\n"); print_list xs)
-|	print_list _ = (TextIO.print "Done\n");
-
-print_list (!nullable);
 
 
-val first : (AtomSet.set ref) AtomMap.map ref = ref AtomMap.empty;
 
-fun init_first () = let fun temp (x::xs) = (first := AtomMap.insert (!first, x, ref AtomSet.empty); temp xs)
-                            |   temp _ = () in
-                        temp (AtomSet.listItems (#symbols grammar))
-                    end;
-
-init_first ();
+(* Implementation of FIRST.
+   Use "find_first ()" to get the FIRST sets for each symbol in the grammar. *)
 
 fun add_first_symbol y x = let val fst_x = if AtomSet.member (#tokens grammar, x) then AtomSet.add (AtomSet.empty, x)
                                            else if Atom.same (x, Atom.atom "EPS") then AtomSet.empty
@@ -101,7 +92,7 @@ fun add_first_symbol y x = let val fst_x = if AtomSet.member (#tokens grammar, x
 							   else (cont := true; AtomMap.lookup (!first, y) := AtomSet.union(fst_x, fst_y))
 							end;
 
-fun find_first_prod y (x::xs) = (add_first_symbol y x; if member_list (!nullable) x then find_first_prod y xs else ())
+fun find_first_prod y (x::xs) = (add_first_symbol y x; if member_atom_list (!nullable) x then find_first_prod y xs else ())
 |	find_first_prod _ _ = ();
 
 fun find_first_rule y (x::xs) = (find_first_prod y x; find_first_rule y xs)
@@ -115,29 +106,12 @@ fun find_first_symbols (x::xs) = (find_first_symbol x; find_first_symbols xs)
 |	find_first_symbols _ = ();
 
 fun find_first () = (cont := false; find_first_symbols (AtomSet.listItems (#symbols grammar));
-						if (!cont) then find_first () else ());
-
-
-fun print_set x = print_list (AtomSet.listItems x);
-fun print_map y = let fun prn ((x::xs) : (Atom.atom * (AtomSet.set ref)) list) = (TextIO.print ("Printing for symbol " ^ (Atom.toString (#1 x)) ^ ":-\n");
-											print_set (!(#2 x)); prn xs)
-					  |	  prn _ = () in
-					  prn (AtomMap.listItemsi y)
-				   	end;
-
-find_first ();
-print_map (!first);	
+					 if (!cont) then find_first () else ());
 
 
 
-val follow : (AtomSet.set ref) AtomMap.map ref = ref AtomMap.empty;
-
-fun init_follow () = let fun temp (x::xs) = (follow := AtomMap.insert (!follow, x, ref AtomSet.empty); temp xs)
-                            |   temp _ = () in
-                        temp (AtomSet.listItems (#symbols grammar))
-                    end;
-
-init_follow ();
+(* Implementation of FOLLOW.
+   Use "find_follow ()" to get the FOLLOW sets for each symbol in the grammar. *)
 
 fun add_follow_symbol y x (xs::xss) = (let val fst_xs = if AtomSet.member (#tokens grammar, xs) then AtomSet.add (AtomSet.empty, xs)
 									   					else !(AtomMap.lookup (!first, xs))
@@ -145,8 +119,8 @@ fun add_follow_symbol y x (xs::xss) = (let val fst_xs = if AtomSet.member (#toke
 											if AtomSet.isSubset (fst_xs, foll_x) then ()
 											else (cont := true; AtomMap.lookup (!follow, x) := AtomSet.union (fst_xs, foll_x))
 										end;
-										if member_list (!nullable) xs then add_follow_symbol y x xss else ())
-| 	add_follow_symbol y x _ = let val foll_y = !(AtomMap.lookup (!follow, y)) 
+										if member_atom_list (!nullable) xs then add_follow_symbol y x xss else ())
+| 	add_follow_symbol y x _ = let val foll_y = !(AtomMap.lookup (!follow, y))
 										val foll_x = !(AtomMap.lookup (!follow, x)) in
 									if AtomSet.isSubset (foll_y, foll_x) then ()
 									else (cont := true; AtomMap.lookup (!follow, x) := AtomSet.union (foll_x, foll_y))
@@ -166,11 +140,15 @@ fun find_follow_symbol x = let val rl = RHSSet.listItems (AtomMap.lookup (#rules
 fun find_follow_symbols (x::xs) = (find_follow_symbol x; find_follow_symbols xs)
 |	find_follow_symbols _ = ();
 
-val cnt = ref 0;
-
-fun find_follow () = (cnt := !cnt + 1; TextIO.print (Int.toString (!cnt)); cont := false; find_follow_symbols (AtomSet.listItems (#symbols grammar));
-						if (!cont) then find_follow () else ());
+fun find_follow () = (cont := false; find_follow_symbols (AtomSet.listItems (#symbols grammar));
+					  if (!cont) then find_follow () else ());
 
 
-find_follow ();
-print_map (!follow);	
+
+
+
+(* Finally computing NULLABLE, FIRST, FOLLOW from the functions defined above and printing the result. *)
+(find_nullable (); find_first (); find_follow ());
+(TextIO.print ("The list of NULLABLE symbols :-\t"); print_atom_list (!nullable));
+(TextIO.print ("\nThe list of FIRST tokens corresponding to each symbols in the grammar :-\n"); print_atom_atomset_map (!first));
+(TextIO.print ("\nThe list of FOLLOW tokens correspoding to each symbols in the grammar :- \n"); print_atom_atomset_map (!follow));

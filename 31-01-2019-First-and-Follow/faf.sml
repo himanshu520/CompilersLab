@@ -1,6 +1,8 @@
 (* This file contains the code to find the NULLABLE symbols and the FIRST and FOLLOW sets of all the symbols in the grammar
    defined in the file grammar.sml. *)
 
+use "type.sml";
+use "grammar.sml";
 
 (* Set of atoms to store all the nullable symbols. *)
 val nullable : Atom.atom list ref = ref nil;

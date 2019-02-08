@@ -37,9 +37,13 @@ fun print_ll_table_entry ((x, y), z) = (TextIO.print ("(" ^ (Atom.toString x) ^ 
                                         TextIO.print "\n");
 fun print_ll_table () = app print_ll_table_entry (LL_TABLE.listItemsi (!ll_table))
 
+fun member_table_entry ((_, x)::xs) (z, y) = if List.collate (Atom.compare) (x, y) = EQUAL then true 
+                                             else member_table_entry xs (z, y)
+|   member_table_entry _ _ = false;
 
 fun fill_ll_table_entry x z y = let val prev_ent = LL_TABLE.lookup (!ll_table, (x, y)) in
-                                    prev_ent := (x, z) :: (!prev_ent)
+                                    if member_table_entry (!prev_ent) (x, z) then ()
+                                    else prev_ent := (x, z) :: (!prev_ent)
                                 end;
 
 fun fill_ll_table_symbol_production y z (x::xs) = if AtomSet.member (#tokens grammar, x) then fill_ll_table_entry y z x

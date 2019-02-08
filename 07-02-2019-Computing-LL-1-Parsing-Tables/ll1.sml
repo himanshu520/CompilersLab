@@ -10,7 +10,7 @@ structure ll_table_key = struct
                                              end
 end;
 
-structure LL_TABLE = RedBlackMapFn (ll_table_key); 
+structure LL_TABLE = RedBlackMapFn (ll_table_key);
 
 val ll_table : ll_table_value LL_TABLE.map ref = ref LL_TABLE.empty;
 
@@ -36,3 +36,26 @@ fun print_ll_table_entry ((x, y), z) = (TextIO.print ("(" ^ (Atom.toString x) ^ 
                                         app print_ll_table_production (!z);
                                         TextIO.print "\n");
 fun print_ll_table () = app print_ll_table_entry (LL_TABLE.listItemsi (!ll_table))
+
+
+fun fill_ll_table_entry x z y = let val prev_ent = LL_TABLE.lookup (!ll_table, (x, y)) in
+                                    prev_ent := (x, z) :: (!prev_ent)
+                                end;
+
+fun fill_ll_table_symbol_production y z (x::xs) = if AtomSet.member (#tokens grammar, x) then fill_ll_table_entry y z x
+                                                  else if Atom.compare (x, Atom.atom "EPS") = EQUAL then fill_ll_table_symbol_production y z xs
+                                                  else (app (fill_ll_table_entry y z) (AtomSet.listItems (!(AtomMap.lookup(!first, x))));
+                                                        fill_ll_table_symbol_production y z xs)
+|   fill_ll_table_symbol_production y z _ = app (fill_ll_table_entry y z) (AtomSet.listItems (!(AtomMap.lookup(!follow, y))));
+
+fun fill_ll_table_symbol (z, y) = let fun fill_ll_table_symbol_productions (x::xs) = (fill_ll_table_symbol_production z x x;
+                                                                                      fill_ll_table_symbol_productions xs) 
+                                      |   fill_ll_table_symbol_productions _ = () in
+                                        fill_ll_table_symbol_productions (RHSSet.listItems y)
+                                    end;
+
+fun fill_ll_table () = app fill_ll_table_symbol (AtomMap.listItemsi (#rules grammar));
+
+
+fill_ll_table ();
+print_ll_table ();

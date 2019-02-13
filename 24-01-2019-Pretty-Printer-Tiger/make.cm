@@ -1,0 +1,10 @@
+(* make.cm Build project *)
+Library
+    structure PrettyPrinter
+is
+    ast.sml                             (* abstract syntax tree for our grammar *)
+    prettyPrinter.lex                   (* Lexer for our grammar *)
+    prettyPrinter.grm:MLYacc            (* Parser for our grammar *)
+    $/basis.cm                          (* SML/NJ’s Basis Library *)
+    $/ml-yacc-lib.cm                    (* Code written by Lucent *)
+    $smlnj/compiler/compiler.cm         (* Structure Compiler *)

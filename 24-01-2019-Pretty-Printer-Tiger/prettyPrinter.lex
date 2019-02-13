@@ -9,7 +9,7 @@ type svalue        = Tokens.svalue
 type ('a,'b) token = ('a,'b) Tokens.token
 type lexresult     = (svalue, pos) token
 
-fun eof () = Tokens.EOF (!lineNum, !charNum);
+fun eof filename = Tokens.EOF (!lineNum, !charNum);
 type pos = int * int;
 
 fun error_msg str = TextIO.print ("Illegal string " ^ str ^ " found at line number " ^ 
@@ -30,6 +30,7 @@ alpha = [a-zA-Z];
 digits = [0-9];
 ws = [\t\ ];
 %s COMMENT;
+%arg (filename : string)
 
 
 %%

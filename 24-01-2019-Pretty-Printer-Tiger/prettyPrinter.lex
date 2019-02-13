@@ -6,11 +6,11 @@ val prevCharNum = ref 0;
 val charNum = ref 1;
 
 type pos = int;
-type svalue        = Tokens.svalue
-type ('a, 'b) token = ('a, 'b) Tokens.token
-type lexresult     = (svalue, pos) token
+type svalue = Tokens.svalue;
+type ('a, 'b) token = ('a, 'b) Tokens.token;
+type lexresult = (svalue, pos) token;
 
-fun eof filename = Tokens.EOF (!lineNum, !charNum);
+fun eof fileName = Tokens.EOF (!lineNum, !charNum);
 
 fun error_msg str = TextIO.print ("Illegal string " ^ str ^ " found at line number " ^ 
                                   (Int.toString (!prevLineNum)) ^ " at position " ^ Int.toString (!prevCharNum) ^
@@ -20,7 +20,7 @@ fun error_msg str = TextIO.print ("Illegal string " ^ str ^ " found at line numb
 %%
 
 %header (functor PrettyPrinterLexFun(structure Tokens : PrettyPrinter_TOKENS));
-%arg (filename : string);
+%arg (fileName : string);
 
 alpha = [a-zA-Z];
 digits = [0-9];

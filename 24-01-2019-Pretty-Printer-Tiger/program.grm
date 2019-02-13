@@ -1,0 +1,61 @@
+(* This is the preamble where you can have arbitrary sml code. For us
+it is empty *)
+
+%%
+
+(* Name of the parser *)
+%name PrettyPrinter
+
+(* Produces verbose description of the generated LALR parser *)
+%verbose
+
+(* type to capture the position of a token within a file *)
+%pos int * int
+
+(* The terminals or tokens of the language.
+   Similar to ML datatype declaration.
+   The terminals with no datatype have no value associated with them *)
+%term CONST of int
+    | ID of string
+    | EQUALS
+    | PLUS
+    | MUL
+    | LPAREN
+    | RPAREN
+    | EOF
+
+(* The nonterminals or symbols of the language.
+   The types for the nonterminals are the correspoding abstract syntax used to capture the semantic 
+   meaning of the values associated with the nonterminal *)
+%nonterm PROGRAM     of Ast.Program
+       | STMTS       of Ast.Program
+       | STMT        of Ast.Stmt
+       | EXPR        of Ast.Expr
+       | TERM        of Ast.Term
+       | FACTOR      of AST.Factor
+
+
+%eop EOF                (* the set of terminals that may follow the start symbol *)
+%pure                   (* the semantic actions are free of significant side-effects and always terminate *)
+%noshift EOF            (* non-shiftable terminals *)
+
+
+%%
+
+(* The grammar associated with our program *)
+PROGRAM : STMTS                     ( STMTS )
+
+STMTS   : STMT                      ( STMT :: nil )
+	    | STMT STMTS                ( STMT :: STMTS )
+
+STMT    : ID EQUALS EXPR            ( (ID, EXPR) )
+
+EXPR    : LPAREN EXPR RPAREN        ( EXPR )
+        | TERM PLUS EXPR            ( Ast.S (TERM, EXPR) )
+	    | TERM                      ( Ast.T TERM )
+	    
+TERM    : FACTOR MUL TERM           ( Ast.P (FACTOR, TERM) )
+        | FACTOR                    ( Ast.F (FACTOR) )
+
+FACTOR  : ID                        ( Ast.V ID )
+        | CONST                     ( Ast.Const CONST )

@@ -10,7 +10,7 @@ it is empty *)
 %verbose
 
 (* type to capture the position of a token within a file *)
-%pos int * int
+%pos int
 
 (* The terminals or tokens of the language.
    Similar to ML datatype declaration.
@@ -38,6 +38,7 @@ it is empty *)
 %eop EOF                (* the set of terminals that may follow the start symbol *)
 %pure                   (* the semantic actions are free of significant side-effects and always terminate *)
 %noshift EOF            (* non-shiftable terminals *)
+%arg (fileName) : string
 
 
 %%

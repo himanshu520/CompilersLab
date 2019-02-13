@@ -5,6 +5,7 @@ val lineNum = ref 1;
 val prevCharNum = ref 0;
 val charNum = ref 1;
 
+type arg = string;
 type pos = int;
 type svalue = Tokens.svalue;
 type ('a, 'b) token = ('a, 'b) Tokens.token;
@@ -20,7 +21,7 @@ fun error_msg str = TextIO.print ("Illegal string " ^ str ^ " found at line numb
 %%
 
 %header (functor PrettyPrinterLexFun(structure Tokens : PrettyPrinter_TOKENS));
-%arg (fileName : string);
+%arg (fileName:string);
 
 alpha = [a-zA-Z];
 digits = [0-9];

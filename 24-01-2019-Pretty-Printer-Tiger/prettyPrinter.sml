@@ -16,22 +16,23 @@ structure PrettyPrinter = struct
     
     exception PrettyPrinterError;
     
-    fun printTree = List.app (fn x => (printStmt x; TextIO.print "\n"))
-    and printStmt stmt (var, exp) = (TextIO.print (var ^ " = "); printExp exp)
-    and printExp (T term) = printTerm term |
-        printExp (S (term, exp)) = (printTerm term; TextIO.print (" + "); printExp exp)
-    and printTerm (F factor) = printFactor factor |
-        printTerm (P (factor, term)) = (printFactor factor; TextIO.print (" * "); printExp term)
-    and printFactor (V str) = TextIO.print str |
-        printFactor (Const const) = TextIO.print (Int.toString const);
+    fun printStmt stmt (var, exp) = (TextIO.print (var ^ " = "); printExp exp)
+    and printExp (Ast.T term) = printTerm term |
+        printExp (Ast.S (term, exp)) = (printTerm term; TextIO.print (" + "); printExp exp)
+    and printTerm (Ast.F factor) = printFactor factor |
+        printTerm (Ast.P (factor, term)) = (printFactor factor; TextIO.print (" * "); printTerm term)
+    and printFactor (Ast.V str) = TextIO.print str |
+        printFactor (Ast.Const const) = TextIO.print (Int.toString const);
+
+    val printTree : Ast.Program -> unit = List.app (fn x => (printStmt x; TextIO.print "\n"));
 
     fun prettyPrint fileName =
         let val inStream = TextIO.openIn fileName;
-            val grab n => if TextIO.endOfStream inStream then "" else TextIO.inputN (inStream, n);
-            val printError (msg, line, col) = print (fileName ^ "[" ^ Int.toString line ^ ":" 
+            fun grab n = if TextIO.endOfStream inStream then "" else TextIO.inputN (inStream, n);
+            fun printError (msg, line, col) = print (fileName ^ "[" ^ Int.toString line ^ ":" 
                                                   ^ Int.toString col ^ "] " ^ msg ^ "\n");
-            val (tree, rem) = PiParser.parse (15, (PiParser.makeLexer grab fileName), printError, fileName);
-            handle PrettyPrinterParser.ParseError => raise PrettyPinterError;
+            val (tree, rem) = PrettyPrinterParser.parse (15, (PrettyPrinterParser.makeLexer grab fileName), printError, fileName)
+            handle PrettyPrinterParser.ParseError => raise PrettyPrinterError;
             (* Close the source program file *)
             val _ = TextIO.closeIn inStream;
         in printTree tree end

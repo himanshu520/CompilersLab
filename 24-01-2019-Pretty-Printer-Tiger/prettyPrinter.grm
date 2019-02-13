@@ -32,7 +32,7 @@ it is empty *)
        | STMT        of Ast.Stmt
        | EXPR        of Ast.Expr
        | TERM        of Ast.Term
-       | FACTOR      of AST.Factor
+       | FACTOR      of Ast.Factor
 
 
 %eop EOF                (* the set of terminals that may follow the start symbol *)

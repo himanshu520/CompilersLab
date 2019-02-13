@@ -24,7 +24,7 @@ fun error_msg str = TextIO.print ("Illegal string " ^ str ^ " found at line numb
    functor that accepts a structure Tokens of signature specified below.
    This Token structure is the same that is returned by ml-yacc on processing the grammar file
    specified in program.grm *)
-%header (functor ExprLexFun(structure Tokens : Expr_TOKENS));
+%header (functor ExprLexFun(structure Tokens : PrettyPrinter_TOKENS));
 
 alpha = [a-zA-Z];
 digits = [0-9];

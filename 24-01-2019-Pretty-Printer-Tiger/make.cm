@@ -3,8 +3,9 @@ Library
     structure PrettyPrinter
 is
     ast.sml                             (* abstract syntax tree for our grammar *)
-    prettyPrinter.lex                   (* Lexer for our grammar *)
-    prettyPrinter.grm:MLYacc            (* Parser for our grammar *)
+    prettyPrinter.lex                   (* Lexer description for our grammar *)
+    prettyPrinter.grm:MLYacc            (* Parser description for our grammar *)
+    prettyPrinter.sml                   (* Wrapper to use the parser and lexer generated to pretty print *)
     $/basis.cm                          (* SML/NJ’s Basis Library *)
     $/ml-yacc-lib.cm                    (* Code written by Lucent *)
     $smlnj/compiler/compiler.cm         (* Structure Compiler *)

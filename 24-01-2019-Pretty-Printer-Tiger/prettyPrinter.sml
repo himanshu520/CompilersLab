@@ -16,7 +16,7 @@ structure PrettyPrinter = struct
     
     exception PrettyPrinterError;
     
-    fun printStmt stmt (var, exp) = (TextIO.print (var ^ " = "); printExp exp)
+    fun printStmt (var, exp) = (TextIO.print (var ^ " = "); printExp exp)
     and printExp (Ast.T term) = printTerm term |
         printExp (Ast.S (term, exp)) = (printTerm term; TextIO.print (" + "); printExp exp)
     and printTerm (Ast.F factor) = printFactor factor |

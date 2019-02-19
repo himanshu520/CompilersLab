@@ -92,67 +92,71 @@ it is empty *)
 %%
 
 (* The grammar associated with our program *)
-PROGRAM : EXP                       ( EXP )
+PROGRAM : EXP                                       ( EXP )
 
-EXP     : NIL
-        | INTEGER
-        | STRING
-        | LVALUE
-        | MINUS EXP
-        | LPAREN EXPS RPAREN
-        | LPAREN RPAREN
-        | ID LPAREN EXPS RPAREN
-        | ID LPAREN RPAREN
-        | EXP OPERATOR EXP
-        | ID LBRACKETS EXP RBRACKETS OF EXP
-        | ID LBRACES RECORDFIELDDEC RBRACES
-        | LVALUE ASSIGN EXP
-        | IF EXP THEN EXP ELSE EXP
-        | IF EXP THEN EXP
-        | WHILE EXP DO EXP
-        | FOR ID ASSIGN EXP TO EXP DO EXP
-        | LET DECS IN EXPS END
-        | LET DECS IN END
+EXP     : NIL                                       ( Nil )
+        | INTEGER                                   ( Integer INTEGER )
+        | STRING                                    ( String STRING )
+        | LVALUE                                    ( Lval LVALUE ) 
+        | MINUS EXP                                 ( Negation EXP ) 
+        | LPAREN EXPS RPAREN                        ( Exps EXPS )
+        | LPAREN RPAREN                             ( Exps nil )
+        | ID LPAREN EXPS RPAREN                     ( FunCall (ID, EXPS) )
+        | ID LPAREN RPAREN                          ( FunCall (ID, nil) )
+        | EXP OPERATOR EXP                          ( App (EXP1, OPERATOR, EXP2) )
+        | ID LBRACKETS EXP RBRACKETS OF EXP         ( Array (ID, EXP1, EXP2) )
+        | ID LBRACES RECORDFIELDDEC RBRACES         ( Record (ID, RECORDFIELDDEC) )
+        | LVALUE ASSIGN EXP                         ( Assignment (LVALUE, EXP) )
+        | IF EXP THEN EXP ELSE EXP                  ( IfThenElse (EXP1, EXP2, EXP3) )
+        | IF EXP THEN EXP                           ( IfThen (EXP1, EXP2) )
+        | WHILE EXP DO EXP                          ( While (EXP1, EXP2) )
+        | FOR ID ASSIGN EXP TO EXP DO EXP           ( For (ID, EXP1, EXP2, EXP3) )
+        | LET DECS IN EXPS END                      ( Let (Decs, EXPS) ) 
+        | LET DECS IN END                           ( Let (Decs, nil) )
 
-EXPS    : EXP
-        | EXP SEMICOLON EXPS
+EXPS    : EXP                                       ( [EXP] )
+        | EXP SEMICOLON EXPS                        ( EXP :: EXPS )
 
-LVALUE  : ID
-        | LVALUE LBRACKETS EXP RBRACKETS
-        | LVALUE DOT ID
+LVALUE  : ID                                        ( Id ID )
+        | LVALUE LBRACKETS EXP RBRACKETS            ( Subscript (LVALUE, EXP) )
+        | LVALUE DOT ID                             ( Field (LVALUE, ID) )
 
 RECORDFIELDDEC
-        : ID EQUALS EXP 
-        | ID EQUALS EXP COMMA RECORDFIELDDEC
+        : ID EQUALS EXP                             ( [(ID, EXP)] )
+        | ID EQUALS EXP COMMA RECORDFIELDDEC        ( (ID, EXP) :: RECORDFIELDDEC )
 
-DECS    : TYPEDEC
-        | VARDEC
-        | FUNDEC
+DECS    : TYPEDEC                                   ( TyDec TYPEDEC )
+        | VARDEC                                    ( VDec VARDEC )
+        | FUNDEC                                    ( FunDec FUNDEC )
 
-TYPEDEC : TYPE ID EQUALS ID
-        | TYPE ID EQUALS ARRAY OF ID
-        | TYPE ID EQUALS LBRACES RECORDFIELDCREATE RBRACES
+TYPEDEC : TYPE ID EQUALS ID                         ( TypeAssignment (ID1, ID2) )
+        | TYPE ID EQUALS ARRAY OF ID                ( ArrayType (ID1, ID2) )
+        | TYPE ID EQUALS LBRACES                    
+          RECORDFIELDCREATE RBRACES                 ( RecordType (ID, RECORDFIELDCREATE) )
 
 RECORDFIELDCREATE 
-        : ID COLON ID
-        | ID COLON ID SEMICOLON RECORDFIELDCREATE
+        : ID COLON ID                               ( [(ID1, ID2)] )
+        | ID COLON ID SEMICOLON RECORDFIELDCREATE   ( (ID1, ID2) :: RECORDFIELDCREATE )
 
-FUNDEC  : FUNCTION ID LPAREN RECORDFIELDCREATE RPAREN EQUALS EXP
-        | FUNCTION ID LPAREN RPAREN EQUALS EXP
-        | FUNCTION ID LPAREN RECORDFIELDCREATE RPAREN COLON ID EQUALS EXP
-        | FUNCTION ID LPAREN RPAREN COLON ID EQUALS EXP
+FUNDEC  : FUNCTION ID LPAREN RECORDFIELDCREATE      
+          RPAREN EQUALS EXP                         ( Fun (ID, RECORDFIELDCREATE, EXP) )
+        | FUNCTION ID LPAREN RPAREN EQUALS EXP      ( Fun (ID, [], EXP) )
+        | FUNCTION ID LPAREN RECORDFIELDCREATE 
+          RPAREN COLON ID EQUALS EXP                ( FunType (ID1, RECORDFIELDCREATE, ID2, EXP) )
+        | FUNCTION ID LPAREN RPAREN COLON ID        
+          EQUALS EXP                                ( FunType (ID1, [], ID2, EXP) )
 
-VARDEC  : VAR ID ASSIGN EXP
-        | VAR ID COLON ID ASSIGN EXP
+VARDEC  : VAR ID ASSIGN EXP                         ( Var (ID, EXP) )
+        | VAR ID COLON ID ASSIGN EXP                ( VarType (ID1, ID2, EXP) )
 
 OPERATOR 
-        : PLUS
-        | MINUS
-        | MULTIPLY
-        | DIVIDE
-        | GREATER
-        | LESS
-        | EQUALS
-        | NOTEQUAL
-        | LESSEQUAL
-        | GREATEREQUAL
+        : PLUS                                      ( Plus )
+        | MINUS                                     ( Minus )
+        | MULTIPLY                                  ( Multiply )
+        | DIVIDE                                    ( Divide )
+        | GREATER                                   ( Greater )
+        | LESS                                      ( Less )
+        | EQUALS                                    ( Equals )
+        | NOTEQUAL                                  ( NotEqual )
+        | LESSEQUAL                                 ( LessEqual )
+        | GREATEREQUAL                              ( GreaterEqual )

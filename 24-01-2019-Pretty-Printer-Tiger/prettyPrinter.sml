@@ -16,16 +16,6 @@ structure PrettyPrinter = struct
     
     exception PrettyPrinterError;
     
-    fun printStmt (var, exp) = (TextIO.print (var ^ " = "); printExp exp)
-    and printExp (Ast.T term) = printTerm term |
-        printExp (Ast.S (term, exp)) = (printTerm term; TextIO.print (" + "); printExp exp)
-    and printTerm (Ast.F factor) = printFactor factor |
-        printTerm (Ast.P (factor, term)) = (printFactor factor; TextIO.print (" * "); printTerm term)
-    and printFactor (Ast.V str) = TextIO.print str |
-        printFactor (Ast.Const const) = TextIO.print (Int.toString const);
-
-    val printTree : Ast.Program -> unit = List.app (fn x => (printStmt x; TextIO.print "\n"));
-
     fun prettyPrint fileName =
         let val inStream = TextIO.openIn fileName;
             fun grab n = if TextIO.endOfStream inStream then "" else TextIO.inputN (inStream, n);
@@ -35,6 +25,6 @@ structure PrettyPrinter = struct
             handle PrettyPrinterParser.ParseError => raise PrettyPrinterError;
             (* Close the source program file *)
             val _ = TextIO.closeIn inStream;
-        in printTree tree end
+        in tree end
 
 end;

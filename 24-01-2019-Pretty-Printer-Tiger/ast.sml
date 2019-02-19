@@ -1,10 +1,45 @@
 (* The abstract syntax tree for expression *)
 structure Ast = struct
 
-    datatype Factor = V of string | Const of int
-    datatype Term = F of Factor | P of Factor * Term
-    datatype Expr = T of Term | S of Term * Expr
-    type Stmt = string * Expr
-    type Program = Stmt list
+    datatype Exp = NIL
+                 | Integer of int
+                 | String of string
+                 | Lval of Lvalue
+                 | Negation of Exp
+                 | Exps of Exp list
+                 | FunCall of string * (Exp list)
+                 | App of Exp * Operator * Exp
+                 | Array of string * Exp * Exp
+                 | Record of string * ((string * Exp) list)
+                 | Assignment of Lvalue * Exp
+                 | IfThenElse of Exp * Exp * Exp
+                 | IfThen of Exp * Exp
+                 | While of Exp * Exp
+                 | For of string * Exp * Exp * Exp
+                 | Let of Decs * (Exp list)
 
+    and   Lvalue = Id of string
+                 | Subscript of Lvalue * Exp
+                 | Field of Lvalue * string
+
+    and Operator = Plus | Minus | Divide | Multiply |
+                   Equals | NotEquals | Greater | Less |
+                   GreaterEqual | LessEqual
+    
+    and     Decs = TyDec of TypeDec
+                 | VDec of VarDec
+                 | FDec of FunDec
+
+    and  TypeDec = TypeAssignment of string * string
+                 | ArrayType of string * string
+                 | RecordType of string * ((string * string) list)
+
+    and   VarDec = Var of string * Exp
+                 | VarType of string * string * Exp
+
+    and   FunDec = Fun of string * ((string * string) list) * Exp
+                 | FunType of string * ((string * string) list) * string * Exp;
+
+
+    type program = Exp;
 end

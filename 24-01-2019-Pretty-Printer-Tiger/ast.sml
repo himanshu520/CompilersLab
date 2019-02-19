@@ -41,5 +41,5 @@ structure Ast = struct
                  | FunType of string * ((string * string) list) * string * Exp;
 
 
-    type program = Exp;
+    type Program = Exp;
 end

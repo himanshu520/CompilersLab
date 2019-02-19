@@ -48,6 +48,7 @@ it is empty *)
     | COLON
     | DOT
     | SEMICOLON
+    | COMMA
     | PLUS
     | MINUS
     | EQUALS
@@ -61,12 +62,16 @@ it is empty *)
 (* The nonterminals or symbols of the language.
    The types for the nonterminals are the correspoding abstract syntax used to capture the semantic 
    meaning of the values associated with the nonterminal *)
-%nonterm PROGRAM     of Ast.Program
-       | STMTS       of Ast.Program
-       | STMT        of Ast.Stmt
-       | EXPR        of Ast.Expr
-       | TERM        of Ast.Term
-       | FACTOR      of Ast.Factor
+%nonterm PROGRAM                of Ast.Program
+       | EXP                    of Ast.Exp
+       | EXPS                   of Ast.Exps
+       | LVALUE                 of Ast.Lvalue
+       | RECORDFIELDDEC         of Ast.Recordfielddec
+       | RECORDFIELDCREATE      of Ast.Recordfieldcreate
+       | DECS                   of Decs
+       | TYPEDEC                of Typedec
+       | FUNDEC                 of Fundec
+       | VARDEC                 of Vardec
 
 
 %eop EOF                (* the set of terminals that may follow the start symbol *)
@@ -78,7 +83,7 @@ it is empty *)
 (* Specifying the precedence and associativity of operators *)
 %left OR
 %left AND 
-%nonassoc GREATEREQUAL LESSEQUAL EQUAL NOTEQUAL LESS GREATER
+%nonassoc GREATEREQUAL LESSEQUAL EQUALS NOTEQUAL LESS GREATER
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
 %left ASSIGN
@@ -88,23 +93,53 @@ it is empty *)
 (* The grammar associated with our program *)
 PROGRAM : EXP                       ( EXP )
 
-EXP     : LVALUE
-        | NIL
+EXP     : NIL
         | INTEGER
         | STRING
-        | 
+        | LVALUE
+        | MINUS EXP
+        | LPAREN EXPS RPAREN
+        | LPAREN RPAREN
+        | ID LPAREN EXPS RPAREN
+        | ID LPAREN RPAREN
+        | EXP OPERATOR EXP
+        | ID LBRACKETS EXP RBRACKETS OF EXP
+        | ID LBRACES RECORDFIELDDEC RBRACES
+        | LVALUE ASSIGN EXP
+        | IF EXP THEN EXP ELSE EXP
+        | IF EXP THEN EXP
+        | WHILE EXP DO EXP
+        | FOR ID ASSIGN EXP TO EXP DO EXP
+        | LET DECS IN EXPS END
+        | LET DECS IN END
 
-EXP     : NIL                       ( STMT :: nil )
-	    | STMT STMTS                ( STMT :: STMTS )
+EXPS    : EXP
+        | EXP SEMICOLON EXPS
 
-STMT    : ID EQUALS EXPR            ( (ID, EXPR) )
+LVALUE  : ID
+        | LVALUE LBRACKETS EXP RBRACKETS
+        | LVALUE DOT ID
 
-EXPR    : LPAREN EXPR RPAREN        ( EXPR )
-        | TERM PLUS EXPR            ( Ast.S (TERM, EXPR) )
-	    | TERM                      ( Ast.T TERM )
-	    
-TERM    : FACTOR MUL TERM           ( Ast.P (FACTOR, TERM) )
-        | FACTOR                    ( Ast.F (FACTOR) )
+RECORDFIELDDEC
+        : ID EQUALS EXP 
+        | ID EQUALS EXP COMMA RECORDFIELDDEC
 
-FACTOR  : ID                        ( Ast.V ID )
-        | CONST                     ( Ast.Const CONST )
+DECS    : TYPEDEC
+        | VARDEC
+        | FUNDEC
+
+TYPEDEC : TYPE ID EQUALS ID
+        | TYPE ID EQUALS ARRAY OF ID
+        | TYPE ID EQUALS LBRACES RECORDFIELDCREATE RBRACES
+
+RECORDFIELDCREATE 
+        : ID COLON ID
+        | ID COLON ID SEMICOLON RECORDFIELDCREATE
+
+FUNDEC  : FUNCTION ID LPAREN RECORDFIELDCREATE RPAREN EQUALS EXP
+        | FUNCTION ID LPAREN RPAREN EQUALS EXP
+        | FUNCTION ID LPAREN RECORDFIELDCREATE RPAREN COLON ID EQUALS EXP
+        | FUNCTION ID LPAREN RPAREN COLON ID EQUALS EXP
+
+VARDEC  : VAR ID ASSIGN EXP
+        | VAR ID COLON ID ASSIGN EXP

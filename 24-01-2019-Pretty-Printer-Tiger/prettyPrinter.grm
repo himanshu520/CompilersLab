@@ -41,6 +41,14 @@ it is empty *)
 %arg (fileName) : string
 
 
+(* Specifying the precedence and associativity of operators *)
+%left OR
+%left AND 
+%nonassoc GREATEREQUAL LESSEQUAL EQUAL NOTEQUAL LESS GREATER
+%left PLUS MINUS
+%left MULTIPLY DIVIDE
+
+
 %%
 
 (* The grammar associated with our program *)

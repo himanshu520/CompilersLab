@@ -15,15 +15,49 @@ it is empty *)
 (* The terminals or tokens of the language.
    Similar to ML datatype declaration.
    The terminals with no datatype have no value associated with them *)
-%term CONST of int
-    | ID of string
-    | EQUALS
-    | PLUS
-    | MUL
+%term INTEGER of int
+    | STRING of string
+    | COMMENT of string
+    | ARRAY
+    | BREAK
+    | DO
+    | ELSE
+    | END
+    | FOR
+    | FUNCTION
+    | IF
+    | IN
+    | LET
+    | NIL
+    | OF
+    | THEN
+    | TO
+    | TYPE
+    | VAR
+    | WHILE
+    | NOTEQUAL
+    | LESSEQUAL
+    | GREATEREQUAL
+    | ASSIGN
     | LPAREN
     | RPAREN
-    | EOF
-
+    | LBRACES
+    | RBRACES
+    | LBRACKETS
+    | RBRACKETS
+    | COLON
+    | DOT
+    | SEMICOLON
+    | PLUS
+    | MINUS
+    | EQUALS
+    | MULTIPLY
+    | DIVIDE 
+    | LESS
+    | GREATER
+    | AND
+    | OR
+    
 (* The nonterminals or symbols of the language.
    The types for the nonterminals are the correspoding abstract syntax used to capture the semantic 
    meaning of the values associated with the nonterminal *)
@@ -47,14 +81,20 @@ it is empty *)
 %nonassoc GREATEREQUAL LESSEQUAL EQUAL NOTEQUAL LESS GREATER
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
-
+%left ASSIGN
 
 %%
 
 (* The grammar associated with our program *)
-PROGRAM : STMTS                     ( STMTS )
+PROGRAM : EXP                       ( EXP )
 
-STMTS   : STMT                      ( STMT :: nil )
+EXP     : LVALUE
+        | NIL
+        | INTEGER
+        | STRING
+        | 
+
+EXP     : NIL                       ( STMT :: nil )
 	    | STMT STMTS                ( STMT :: STMTS )
 
 STMT    : ID EQUALS EXPR            ( (ID, EXPR) )

@@ -1,7 +1,7 @@
 (* The abstract syntax tree for expression *)
 structure Ast = struct
 
-    datatype Exp = NIL
+    datatype Exp = Nil
                  | Integer of int
                  | String of string
                  | Lval of Lvalue
@@ -23,7 +23,7 @@ structure Ast = struct
                  | Field of Lvalue * string
 
     and Operator = Plus | Minus | Divide | Multiply |
-                   Equals | NotEquals | Greater | Less |
+                   Equals | NotEqual | Greater | Less |
                    GreaterEqual | LessEqual
     
     and     Decs = TyDec of TypeDec

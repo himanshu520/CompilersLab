@@ -246,7 +246,7 @@ ws = [\t\ ];
 <INITIAL> "-"                              =>    ( YYBEGIN INITIAL;
                                                     prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;
-                                                    Tokens.DASH (!lineNum, !prevCharNum) ); 
+                                                    Tokens.MINUS (!lineNum, !prevCharNum) ); 
 <INITIAL> "="                              =>    ( YYBEGIN INITIAL;
                                                     prevCharNum := !charNum;
                                                     charNum := !charNum + size yytext;

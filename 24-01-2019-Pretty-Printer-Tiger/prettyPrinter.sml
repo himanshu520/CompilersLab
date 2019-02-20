@@ -32,10 +32,10 @@ structure PrettyPrinter = struct
                                                      result := !result ^ "-";
                                                      printExp x 0)
     |   printExp (AST.Exps x) pos =                 (printSpaces pos;
-                                                     result := !result ^ "( ";
+                                                     result := !result ^ "(\n";
                                                      printExps x (pos + 1);
                                                      printSpaces pos; 
-                                                     result := !result ^ ") \n")
+                                                     result := !result ^ ") ")
     |   printExp (AST.FunCall (x, y)) pos =         (printSpaces pos;
                                                      result := !result ^ x ^ " ( ";
                                                      printExpList y;
@@ -66,7 +66,8 @@ structure PrettyPrinter = struct
                                                         AST.App _        => printExp y 0 |
                                                         AST.Record _     => printExp y 0 |
                                                         _                => (result := !result ^ "\n";
-                                                                            printExp y (pos + 1)))
+                                                                             printExp y (pos + 1);
+                                                                             result := !result ^ "\n"))
     |   printExp (AST.IfThenElse (x, y, z)) pos =   (printSpaces pos;
                                                      result := !result ^ "if\n";
                                                      printExp x (pos + 1);
@@ -97,15 +98,14 @@ structure PrettyPrinter = struct
                                                      printSpaces pos;
                                                      result := !result ^ "do\n";
                                                      printExp w (pos + 1))
-    |   printExp (AST.Let (x, y)) pos =             (result := !result ^ "\n";
-                                                     printSpaces pos;
+    |   printExp (AST.Let (x, y)) pos =             (printSpaces pos;
                                                      result := !result ^ "let\n";
                                                      printDecList x (pos + 1);
                                                      printSpaces pos;
                                                      result := !result ^ "in\n";
                                                      printExps y (pos + 1);
                                                      printSpaces pos;
-                                                     result := !result ^ "end\n")
+                                                     result := !result ^ "end ")
     |   printExp (AST.Comment x) pos =              (result := !result ^ x)
 
     and printExps (x::y::xs) pos =                  (printExp x pos;

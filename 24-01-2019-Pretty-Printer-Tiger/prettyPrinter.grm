@@ -70,7 +70,8 @@ it is empty *)
        | LVALUE                 of AST.Lvalue
        | RECORDFIELDDEC         of (string * AST.Exp) list
        | RECORDFIELDCREATE      of (string * string) list
-       | DECS                   of AST.Decs
+       | DEC                    of AST.Dec
+       | DECS                   of AST.Dec list
        | TYPEDEC                of AST.TypeDec
        | FUNDEC                 of AST.FunDec
        | VARDEC                 of AST.VarDec
@@ -126,7 +127,9 @@ RECORDFIELDDEC
         : ID EQUALS EXP                             ( [(ID, EXP)] )
         | ID EQUALS EXP COMMA RECORDFIELDDEC        ( (ID, EXP) :: RECORDFIELDDEC )
 
-DECS    : TYPEDEC                                   ( AST.TyDec TYPEDEC )
+DECS    : DEC DECS                                  ( DEC::DECS )
+
+DEC     : TYPEDEC                                   ( AST.TyDec TYPEDEC )
         | VARDEC                                    ( AST.VDec VARDEC )
         | FUNDEC                                    ( AST.FDec FUNDEC )
 

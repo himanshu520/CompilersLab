@@ -1,5 +1,5 @@
 (* The abstract syntax tree for expression *)
-structure Ast = struct
+structure AST = struct
 
     datatype Exp = Nil
                  | Integer of int
@@ -16,7 +16,7 @@ structure Ast = struct
                  | IfThen of Exp * Exp
                  | While of Exp * Exp
                  | For of string * Exp * Exp * Exp
-                 | Let of Decs * (Exp list)
+                 | Let of (Dec list) * (Exp list)
 
     and   Lvalue = Id of string
                  | Subscript of Lvalue * Exp
@@ -26,7 +26,7 @@ structure Ast = struct
                    Equals | NotEqual | Greater | Less |
                    GreaterEqual | LessEqual
     
-    and     Decs = TyDec of TypeDec
+    and      Dec = TyDec of TypeDec
                  | VDec of VarDec
                  | FDec of FunDec
 

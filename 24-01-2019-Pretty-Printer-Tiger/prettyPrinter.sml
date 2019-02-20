@@ -133,8 +133,8 @@ structure PrettyPrinter = struct
     and printLvalue (AST.Id x) pos =                (result := !result ^ x ^ " ")
     |   printLvalue (AST.Subscript (x, y)) pos =    (printLvalue x;
                                                      result := !result ^ "[ ";
-                                                     printExp y (pos + 1);
-                                                     result := !result ^ " ] ")
+                                                     printExp y 0;
+                                                     result := !result ^ "] ")
     |   printLvalue (AST.Field (x, y)) pos =        (printLvalue x;
                                                      result := !result ^ "." ^ y ^ " ")
 
@@ -149,7 +149,7 @@ structure PrettyPrinter = struct
     and printTyDec (AST.TypeAssignment(x, y)) pos = (printSpaces pos;
                                                      result := !result ^ "type " ^ x ^ " = " ^ y ^ "\n")
     |   printTyDec (AST.ArrayType (x, y)) pos =     (printSpaces pos;
-                                                     result := !result ^ "type " ^ x ^ " = " ^ "array " ^ x ^ " of " ^ y ^ "\n")
+                                                     result := !result ^ "type " ^ x ^ " = " ^ "array of " ^ y ^ "\n")
     |   printTyDec (AST.RecordType (x, y)) pos =    (printSpaces pos;
                                                      result := !result ^ "type " ^ x ^ " = { ";
                                                      printRecordTypeList y;

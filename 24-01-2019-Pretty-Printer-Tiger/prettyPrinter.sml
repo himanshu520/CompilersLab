@@ -21,152 +21,195 @@ structure PrettyPrinter = struct
     fun printSpaces cnt = if cnt = 0 then ()
                                      else (result := !result ^ " "; printSpaces (cnt - 1));
     
-    fun printExp Nil =                      (result := !result ^ "nil "; 
-                                             spaceCnt := !spaceCnt + 4)
-    |   printExp (Integer x) =              (result := !result ^ (Int.toString x) ^ " ";
-                                             spaceCnt := !spaceCnt + size (Int.toString x) + 1)
-    |   printExp (String x) =               (result := !result ^ x ^ " ";
-                                             spaceCnt := !spaceCnt + size x + 1)
-    |   printExp (Lval x) =                    printLvalue x
-    |   printExp (Negation x) =             (result := !result ^ "-";
-                                             spaceCnt := !spaceCnt + 1;
-                                             printExp x)
-    |   printExp (Exps x) =                 (result := !result ^ "( "; 
-                                             spaceCnt := !spaceCnt + 2;
-                                             printExpList x; 
-                                             result := !result ^ " ) ";
-                                             spaceCnt := !spaceCnt + 3)
-    |   printExp (FunCall (x, y)) =         (result := !result ^ x ^ "( ";
-                                             spaceCnt := !spaceCnt + size x + 2;
-                                             printExpList x;
-                                             result := !result ^ " ) ";
-                                             spaceCnt := !spaceCnt + 3)
-    |   printExp (App (x, y, z)) =          (printExp x;
-                                             printOperator y;
-                                             printExp z)
-    |   printExp (Array (x, y, z)) =        (result := !result ^ "array " ^ x ^ " [ ";
-                                             spaceCnt := !spaceCnt + 9 + size x;
-                                             printExp y;
-                                             result := !result ^ " ] of ";
-                                             spaceCnt := !spaceCnt + 6;
-                                             printExp z)
-    |   printExp (Record (x, y)) =          (result := !result ^ x ^ " { ";
-                                             spaceCnt := !spaceCnt + size x + 3;
-                                             printStringExp y;
-                                             result := !result ^ " } ";
-                                             spaceCnt := !spaceCnt + 3)
-    |   printExp (Assignment (x, y)) =      (printLvalue x;
-                                             printExp y)
-    |   printExp (IfThenElse (x, y, z)) =   (result := !result ^ "if ";
-                                             spaceCnt := !spaceCnt + 3;
-                                             printExp x;
-                                             result := !result ^ "then ";
-                                             spaceCnt := !spaceCnt + 5;
-                                             printExp y;
-                                             result := !result ^ "else ";
-                                             spaceCnt := !spaceCnt + 5;
-                                             printExp z;)
-    |   printExp (IfThen (x, y)) =          (result := !result ^ "if ";
-                                             spaceCnt := !spaceCnt + 3;
-                                             printExp x;
-                                             result := !result ^ "then ";
-                                             spaceCnt := !spaceCnt + 5;
-                                             printExp y;)
-    |   printExp (While (x, y)) =           (result := !result ^ "while ";
-                                             spaceCnt := !spaceCnt + 6;
-                                             printExp x;
-                                             result := !result ^ "do ";
-                                             spaceCnt := !spaceCnt + 3;
-                                             printExp y)
-    |   printExp (For (x, y, z, w)) =       (result := !result ^ "for " ^ x " := ";
-                                             spaceCnt := !spaceCnt + 8 + size x;
-                                             printExp y;
-                                             result := !result ^ "to ";
-                                             spaceCnt := !spaceCnt + 3;
-                                             printExp z;
-                                             result := !result ^ "do ";
-                                             spaceCnt := !spaceCnt + 3;
-                                             printExp w;)
-    |   printExp (Let (x, y)) =             (result := !result ^ "let\n";
-                                             spaceCnt := !spaceCnt + 4;
-                                             printDecList x;
-                                             spaceCnt := !spaceCnt - 4;
-                                             printSpaces (!spaceCnt);
-                                             result := !result ^ "in\n";
-                                             spaceCnt := !spaceCnt + 4;
-                                             printSpaces (!spaceCnt);
-                                             printExp y;
-                                             spaceCnt := !spaceCnt - 4;
-                                             result := !result ^ "end ";
-                                             spaceCnt := !spaceCnt + 4)
+    fun printExp AST.Nil =                      (result := !result ^ "nil "; 
+                                                 spaceCnt := !spaceCnt + 4)
+    |   printExp (AST.Integer x) =              (result := !result ^ (Int.toString x) ^ " ";
+                                                 spaceCnt := !spaceCnt + size (Int.toString x) + 1)
+    |   printExp (AST.String x) =               (result := !result ^ x ^ " ";
+                                                 spaceCnt := !spaceCnt + size x + 1)
+    |   printExp (AST.Lval x) =                 printLvalue x
+    |   printExp (AST.Negation x) =             (result := !result ^ "-";
+                                                 spaceCnt := !spaceCnt + 1;
+                                                 printExp x)
+    |   printExp (AST.Exps x) =                 (result := !result ^ "( "; 
+                                                 spaceCnt := !spaceCnt + 2;
+                                                 printExpList x; 
+                                                 result := !result ^ " ) ";
+                                                 spaceCnt := !spaceCnt + 3)
+    |   printExp (AST.FunCall (x, y)) =         (result := !result ^ x ^ "( ";
+                                                 spaceCnt := !spaceCnt + size x + 2;
+                                                 printExpList y;
+                                                 result := !result ^ " ) ";
+                                                 spaceCnt := !spaceCnt + 3)
+    |   printExp (AST.App (x, y, z)) =          (printExp x;
+                                                 printOperator y;
+                                                 printExp z)
+    |   printExp (AST.Array (x, y, z)) =        (result := !result ^ "array " ^ x ^ " [ ";
+                                                 spaceCnt := !spaceCnt + 9 + size x;
+                                                 printExp y;
+                                                 result := !result ^ " ] of ";
+                                                 spaceCnt := !spaceCnt + 6;
+                                                 printExp z)
+    |   printExp (AST.Record (x, y)) =          (result := !result ^ x ^ " { ";
+                                                 spaceCnt := !spaceCnt + size x + 3;
+                                                 printStringExpList y;
+                                                 result := !result ^ " } ";
+                                                 spaceCnt := !spaceCnt + 3)
+    |   printExp (AST.Assignment (x, y)) =      (printLvalue x;
+                                                 printExp y)
+    |   printExp (AST.IfThenElse (x, y, z)) =   (result := !result ^ "if ";
+                                                 spaceCnt := !spaceCnt + 3;
+                                                 printExp x;
+                                                 result := !result ^ "then ";
+                                                 spaceCnt := !spaceCnt + 5;
+                                                 printExp y;
+                                                 result := !result ^ "else ";
+                                                 spaceCnt := !spaceCnt + 5;
+                                                 printExp z)
+    |   printExp (AST.IfThen (x, y)) =          (result := !result ^ "if ";
+                                                 spaceCnt := !spaceCnt + 3;
+                                                 printExp x;
+                                                 result := !result ^ "then ";
+                                                 spaceCnt := !spaceCnt + 5;
+                                                 printExp y)
+    |   printExp (AST.While (x, y)) =           (result := !result ^ "while ";
+                                                 spaceCnt := !spaceCnt + 6;
+                                                 printExp x;
+                                                 result := !result ^ "do ";
+                                                 spaceCnt := !spaceCnt + 3;
+                                                 printExp y)
+    |   printExp (AST.For (x, y, z, w)) =       (result := !result ^ "for " ^ x ^ " := ";
+                                                 spaceCnt := !spaceCnt + 8 + size x;
+                                                 printExp y;
+                                                 result := !result ^ "to ";
+                                                 spaceCnt := !spaceCnt + 3;
+                                                 printExp z;
+                                                 result := !result ^ "do ";
+                                                 spaceCnt := !spaceCnt + 3;
+                                                 printExp w)
+    |   printExp (AST.Let (x, y)) =             (result := !result ^ "let\n";
+                                                 spaceCnt := !spaceCnt + 4;
+                                                 printDecList x;
+                                                 spaceCnt := !spaceCnt - 4;
+                                                 printSpaces (!spaceCnt);
+                                                 result := !result ^ "in\n";
+                                                 spaceCnt := !spaceCnt + 4;
+                                                 printSpaces (!spaceCnt);
+                                                 printExps y;
+                                                 spaceCnt := !spaceCnt - 4;
+                                                 result := !result ^ "end ";
+                                                 spaceCnt := !spaceCnt + 4)
 
-    and printExpList (x::y::xs) =           (printExp x;
-                                             result := !result ^ ", ";
-                                             spaceCnt := !spaceCnt + 2;
-                                             printExpList (y::xs))
-    |   printExpList (x::xs) =              (printExp x;
-                                             result := !result ^ " ";
-                                             spaceCnt := !spaceCnt + 1)
-    |   printExpList _ =                    ()
+    and printExps (x::y::xs) =                  (printExp x;
+                                                 result := !result ^ "; ";
+                                                 spaceCnt := !spaceCnt + 2;
+                                                 printExpList (y::xs))
+    |   printExps (x::xs) =                     (printExp x;
+                                                 result := !result ^ " ";
+                                                 spaceCnt := !spaceCnt + 1)
+    |   printExps _ =                           ()
 
-    and printLvalue (Id x) =                (result := !result ^ x ^ " ";
-                                             spaceCnt := !spaceCnt + size z + 1)
-    |   printLvalue (Subscript (x, y)) =    (printLvalue x;
-                                             result := !result ^ "[ ";
-                                             spaceCnt := !spaceCnt + 2;
-                                             printExp y;
-                                             result := !result ^ " ] ";
-                                             spaceCnt := !spaceCnt + 3)
-    |   printLvalue (Field (x, y)) =        (printLvalue x;
-                                             result := !result ^ "." ^ y ^ " ";
-                                             spaceCnt := !spaceCnt + 2 + size y;)
+    and printExpList (x::y::xs) =               (printExp x;
+                                                 result := !result ^ ", ";
+                                                 spaceCnt := !spaceCnt + 2;
+                                                 printExpList (y::xs))
+    |   printExpList (x::xs) =                  (printExp x;
+                                                 result := !result ^ " ";
+                                                 spaceCnt := !spaceCnt + 1)
+    |   printExpList _ =                        ()
 
-    and printDecList (x::xs) =              (printSpaces (!spaceCnt);
-                                             printDec x
-                                             result := !result ^ "\n";
-                                             printDecList xs;)
-    |   printDecList _ =                    ()
+    and printStringExpList ((x, y)::z::xs)=     (result := !result ^ x ^ " = ";
+                                                 spaceCnt := !spaceCnt + size x + 3;
+                                                 printExp y;
+                                                 result := !result ^ ", ";
+                                                 spaceCnt := !spaceCnt + 2;
+                                                 printStringExpList (z::xs))
+    |   printStringExpList ((x, y)::xs) =       (result := !result ^ x ^ " = ";
+                                                 spaceCnt := !spaceCnt + size x + 3;
+                                                 printExp y)
+    |   printStringExpList _ =                  ()
 
-    and printDec (TyDec x) =                printTyDec x;
-    |   printDec (VDec y) =                 printVDec y;
-    |   printDec (FDec z) =                 printFDec z;
+    and printLvalue (AST.Id x) =                (result := !result ^ x ^ " ";
+                                                 spaceCnt := !spaceCnt + size x + 1)
+    |   printLvalue (AST.Subscript (x, y)) =    (printLvalue x;
+                                                 result := !result ^ "[ ";
+                                                 spaceCnt := !spaceCnt + 2;
+                                                 printExp y;
+                                                 result := !result ^ " ] ";
+                                                 spaceCnt := !spaceCnt + 3)
+    |   printLvalue (AST.Field (x, y)) =        (printLvalue x;
+                                                 result := !result ^ "." ^ y ^ " ";
+                                                 spaceCnt := !spaceCnt + 2 + size y)
 
-    and printTyDec (TypeAssignment(x, y)) = (result := !result ^ "type " ^ x ^ " = " ^ y ^ " ";
-                                             spaceCnt := !spaceCnt + 9)
-    |   printTyDec (ArrayType (x, y)) =     (result := !result ^ "type " ^ x ^ " = " ^ "array " ^ x ^ " of " ^ y;
-                                             spaceCnt := !spaceCnt + 18)
-    |   printTyDec (RecordType (x, y)) =    (result := !result ^ "type " ^ x ^ " = { ";
-                                             spaceCnt := !spaceCnt + 10;
-                                             printRecordTypeList y;
-                                             result := !result ^ "} ";
-                                             spaceCnt := !spaceCnt + 2;)
+    and printDecList (x::xs) =                  (printSpaces (!spaceCnt);
+                                                 printDec x;
+                                                 result := !result ^ "\n";
+                                                 printDecList xs)
+    |   printDecList _ =                        ()
 
-    and printRecordTypeList ((x, y)::z::xs)=(result := !result ^ x ^ " = " ^ y ^ ", ";
-                                             spaceCnt := !spaceCnt + size x + size y + 5)
-        printRecordTypeList (x::xs) =       (result := !result ^ x ^ " = " ^ y;
-                                             spaceCnt := !spaceCnt + size x + size y + 3)
-        printRecordTypeList _ =             ()
+    and printDec (AST.TyDec x) =                (printTyDec x)
+    |   printDec (AST.VDec y) =                 (printVDec y)
+    |   printDec (AST.FDec z) =                 (printFDec z)
 
-    and printVDec (Var (x, y)) =            (result := !result ^ "var " ^ x ^ " := ";
-                                             spaceCnt := !spaceCnt + 8;
-                                             printExp y;)
-    |   printVDec (VarType (x, y, z)) =     (result := !result ^ "var " ^ x ^ " : " ^ y ^ " := ";
-                                             spaceCnt := !spaceCnt + 11;
-                                             printExp y;)
+    and printTyDec (AST.TypeAssignment(x, y)) = (result := !result ^ "type " ^ x ^ " = " ^ y ^ " ";
+                                                 spaceCnt := !spaceCnt + 9)
+    |   printTyDec (AST.ArrayType (x, y)) =     (result := !result ^ "type " ^ x ^ " = " ^ "array " ^ x ^ " of " ^ y;
+                                                 spaceCnt := !spaceCnt + 18)
+    |   printTyDec (AST.RecordType (x, y)) =    (result := !result ^ "type " ^ x ^ " = { ";
+                                                 spaceCnt := !spaceCnt + 10;
+                                                 printRecordTypeList y;
+                                                 result := !result ^ "} ";
+                                                 spaceCnt := !spaceCnt + 2)
 
-    and printFDec (Fun (x, y, z)) =         (result := !result ^ "function " ^ x ^ " ( ";
-                                             spaceCnt := !spaceCnt + 12;
-                                             printRecordTypeList y;
-                                             result := !result ^ " ) = ";
-                                             spaceCnt := !spaceCnt + 5;
-                                             printExp z)
-    |   printFDec (Fun (x, y, z, w)) =      (result := !result ^ "function " ^ x ^ " ( ";
-                                             spaceCnt := !spaceCnt + 12;
-                                             printRecordTypeList y;
-                                             result := !result ^ " ) : " ^ z ^ " = ";
-                                             spaceCnt := !spaceCnt + 8;
-                                             printExp w)
-    fun printTree
+    and printRecordTypeList ((x, y)::z::xs)=    (result := !result ^ x ^ " = " ^ y ^ ", ";
+                                                 spaceCnt := !spaceCnt + size x + size y + 5)
+    |   printRecordTypeList ((x, y)::xs) =      (result := !result ^ x ^ " = " ^ y;
+                                                 spaceCnt := !spaceCnt + size x + size y + 3)
+    |   printRecordTypeList _ =                 ()
+
+    and printVDec (AST.Var (x, y)) =            (result := !result ^ "var " ^ x ^ " := ";
+                                                 spaceCnt := !spaceCnt + 8;
+                                                 printExp y)
+    |   printVDec (AST.VarType (x, y, z)) =     (result := !result ^ "var " ^ x ^ " : " ^ y ^ " := ";
+                                                 spaceCnt := !spaceCnt + 11;
+                                                 printExp z)
+
+    and printFDec (AST.Fun (x, y, z)) =         (result := !result ^ "function " ^ x ^ " ( ";
+                                                 spaceCnt := !spaceCnt + 12;
+                                                 printRecordTypeList y;
+                                                 result := !result ^ " ) = ";
+                                                 spaceCnt := !spaceCnt + 5;
+                                                 printExp z)
+    |   printFDec (AST.FunType (x, y, z, w)) =  (result := !result ^ "function " ^ x ^ " ( ";
+                                                 spaceCnt := !spaceCnt + 12;
+                                                 printRecordTypeList y;
+                                                 result := !result ^ " ) : " ^ z ^ " = ";
+                                                 spaceCnt := !spaceCnt + 8;
+                                                 printExp w)
+    
+    and   printOperator AST.Plus =              (result := !result ^ "+ ";
+                                                 spaceCnt := !spaceCnt + 2)
+    |     printOperator AST.Minus =             (result := !result ^ "- ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.Multiply =          (result := !result ^ "* ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.Divide =            (result := !result ^ "/ ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.NotEqual =          (result := !result ^ "<> ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.Equals =            (result := !result ^ "= ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.Less =              (result := !result ^ "< ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.Greater =           (result := !result ^ "> ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.GreaterEqual =      (result := !result ^ ">= ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.LessEqual =         (result := !result ^ "<= ";
+                                                 spaceCnt := !spaceCnt + 2);
+
+
+    fun printTree tree = (printExp tree; TextIO.print ((!result) ^ "\n\n"));
     
     fun prettyPrint fileName =
         let val inStream = TextIO.openIn fileName;
@@ -177,6 +220,6 @@ structure PrettyPrinter = struct
             handle PrettyPrinterParser.ParseError => raise PrettyPrinterError;
             (* Close the source program file *)
             val _ = TextIO.closeIn inStream;
-        in tree end
+        in printTree tree end
 
 end;

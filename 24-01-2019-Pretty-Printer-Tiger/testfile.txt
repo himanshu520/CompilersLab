@@ -1,3 +1,119 @@
-x=10
+x := 10 y := x           x 
 
-y=19*43
+:= 10 + 5 * - 4  /       324 
+
+&  1
+
+ x :=    -         y
+
+
+
+
+
+
+
+
+
+    t                  =                    int
+
+
+let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in
+           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1 ;
+
+ x :=    -         y ;
+
+
+
+
+
+let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in
+           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1 ;
+
+ x :=    -         y ;
+
+
+
+
+
+
+
+
+
+    t                  =                    int
+
+end;
+
+
+
+    t                  =                    int
+
+
+end
+
+(((x := 10; y := x   / - z); (t:=234));let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in
+           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1 ;
+
+ x :=    -         y ;
+
+
+
+
+
+
+
+
+
+    t                  =                    int
+
+end)

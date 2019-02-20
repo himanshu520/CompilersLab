@@ -15,6 +15,158 @@ structure PrettyPrinterParser =
 structure PrettyPrinter = struct
     
     exception PrettyPrinterError;
+
+    val spaceCnt = ref 0;
+    val result = ref "";
+    fun printSpaces cnt = if cnt = 0 then ()
+                                     else (result := !result ^ " "; printSpaces (cnt - 1));
+    
+    fun printExp Nil =                      (result := !result ^ "nil "; 
+                                             spaceCnt := !spaceCnt + 4)
+    |   printExp (Integer x) =              (result := !result ^ (Int.toString x) ^ " ";
+                                             spaceCnt := !spaceCnt + size (Int.toString x) + 1)
+    |   printExp (String x) =               (result := !result ^ x ^ " ";
+                                             spaceCnt := !spaceCnt + size x + 1)
+    |   printExp (Lval x) =                    printLvalue x
+    |   printExp (Negation x) =             (result := !result ^ "-";
+                                             spaceCnt := !spaceCnt + 1;
+                                             printExp x)
+    |   printExp (Exps x) =                 (result := !result ^ "( "; 
+                                             spaceCnt := !spaceCnt + 2;
+                                             printExpList x; 
+                                             result := !result ^ " ) ";
+                                             spaceCnt := !spaceCnt + 3)
+    |   printExp (FunCall (x, y)) =         (result := !result ^ x ^ "( ";
+                                             spaceCnt := !spaceCnt + size x + 2;
+                                             printExpList x;
+                                             result := !result ^ " ) ";
+                                             spaceCnt := !spaceCnt + 3)
+    |   printExp (App (x, y, z)) =          (printExp x;
+                                             printOperator y;
+                                             printExp z)
+    |   printExp (Array (x, y, z)) =        (result := !result ^ "array " ^ x ^ " [ ";
+                                             spaceCnt := !spaceCnt + 9 + size x;
+                                             printExp y;
+                                             result := !result ^ " ] of ";
+                                             spaceCnt := !spaceCnt + 6;
+                                             printExp z)
+    |   printExp (Record (x, y)) =          (result := !result ^ x ^ " { ";
+                                             spaceCnt := !spaceCnt + size x + 3;
+                                             printStringExp y;
+                                             result := !result ^ " } ";
+                                             spaceCnt := !spaceCnt + 3)
+    |   printExp (Assignment (x, y)) =      (printLvalue x;
+                                             printExp y)
+    |   printExp (IfThenElse (x, y, z)) =   (result := !result ^ "if ";
+                                             spaceCnt := !spaceCnt + 3;
+                                             printExp x;
+                                             result := !result ^ "then ";
+                                             spaceCnt := !spaceCnt + 5;
+                                             printExp y;
+                                             result := !result ^ "else ";
+                                             spaceCnt := !spaceCnt + 5;
+                                             printExp z;)
+    |   printExp (IfThen (x, y)) =          (result := !result ^ "if ";
+                                             spaceCnt := !spaceCnt + 3;
+                                             printExp x;
+                                             result := !result ^ "then ";
+                                             spaceCnt := !spaceCnt + 5;
+                                             printExp y;)
+    |   printExp (While (x, y)) =           (result := !result ^ "while ";
+                                             spaceCnt := !spaceCnt + 6;
+                                             printExp x;
+                                             result := !result ^ "do ";
+                                             spaceCnt := !spaceCnt + 3;
+                                             printExp y)
+    |   printExp (For (x, y, z, w)) =       (result := !result ^ "for " ^ x " := ";
+                                             spaceCnt := !spaceCnt + 8 + size x;
+                                             printExp y;
+                                             result := !result ^ "to ";
+                                             spaceCnt := !spaceCnt + 3;
+                                             printExp z;
+                                             result := !result ^ "do ";
+                                             spaceCnt := !spaceCnt + 3;
+                                             printExp w;)
+    |   printExp (Let (x, y)) =             (result := !result ^ "let\n";
+                                             spaceCnt := !spaceCnt + 4;
+                                             printDecList x;
+                                             spaceCnt := !spaceCnt - 4;
+                                             printSpaces (!spaceCnt);
+                                             result := !result ^ "in\n";
+                                             spaceCnt := !spaceCnt + 4;
+                                             printSpaces (!spaceCnt);
+                                             printExp y;
+                                             spaceCnt := !spaceCnt - 4;
+                                             result := !result ^ "end ";
+                                             spaceCnt := !spaceCnt + 4)
+
+    and printExpList (x::y::xs) =           (printExp x;
+                                             result := !result ^ ", ";
+                                             spaceCnt := !spaceCnt + 2;
+                                             printExpList (y::xs))
+    |   printExpList (x::xs) =              (printExp x;
+                                             result := !result ^ " ";
+                                             spaceCnt := !spaceCnt + 1)
+    |   printExpList _ =                    ()
+
+    and printLvalue (Id x) =                (result := !result ^ x ^ " ";
+                                             spaceCnt := !spaceCnt + size z + 1)
+    |   printLvalue (Subscript (x, y)) =    (printLvalue x;
+                                             result := !result ^ "[ ";
+                                             spaceCnt := !spaceCnt + 2;
+                                             printExp y;
+                                             result := !result ^ " ] ";
+                                             spaceCnt := !spaceCnt + 3)
+    |   printLvalue (Field (x, y)) =        (printLvalue x;
+                                             result := !result ^ "." ^ y ^ " ";
+                                             spaceCnt := !spaceCnt + 2 + size y;)
+
+    and printDecList (x::xs) =              (printSpaces (!spaceCnt);
+                                             printDec x
+                                             result := !result ^ "\n";
+                                             printDecList xs;)
+    |   printDecList _ =                    ()
+
+    and printDec (TyDec x) =                printTyDec x;
+    |   printDec (VDec y) =                 printVDec y;
+    |   printDec (FDec z) =                 printFDec z;
+
+    and printTyDec (TypeAssignment(x, y)) = (result := !result ^ "type " ^ x ^ " = " ^ y ^ " ";
+                                             spaceCnt := !spaceCnt + 9)
+    |   printTyDec (ArrayType (x, y)) =     (result := !result ^ "type " ^ x ^ " = " ^ "array " ^ x ^ " of " ^ y;
+                                             spaceCnt := !spaceCnt + 18)
+    |   printTyDec (RecordType (x, y)) =    (result := !result ^ "type " ^ x ^ " = { ";
+                                             spaceCnt := !spaceCnt + 10;
+                                             printRecordTypeList y;
+                                             result := !result ^ "} ";
+                                             spaceCnt := !spaceCnt + 2;)
+
+    and printRecordTypeList ((x, y)::z::xs)=(result := !result ^ x ^ " = " ^ y ^ ", ";
+                                             spaceCnt := !spaceCnt + size x + size y + 5)
+        printRecordTypeList (x::xs) =       (result := !result ^ x ^ " = " ^ y;
+                                             spaceCnt := !spaceCnt + size x + size y + 3)
+        printRecordTypeList _ =             ()
+
+    and printVDec (Var (x, y)) =            (result := !result ^ "var " ^ x ^ " := ";
+                                             spaceCnt := !spaceCnt + 8;
+                                             printExp y;)
+    |   printVDec (VarType (x, y, z)) =     (result := !result ^ "var " ^ x ^ " : " ^ y ^ " := ";
+                                             spaceCnt := !spaceCnt + 11;
+                                             printExp y;)
+
+    and printFDec (Fun (x, y, z)) =         (result := !result ^ "function " ^ x ^ " ( ";
+                                             spaceCnt := !spaceCnt + 12;
+                                             printRecordTypeList y;
+                                             result := !result ^ " ) = ";
+                                             spaceCnt := !spaceCnt + 5;
+                                             printExp z)
+    |   printFDec (Fun (x, y, z, w)) =      (result := !result ^ "function " ^ x ^ " ( ";
+                                             spaceCnt := !spaceCnt + 12;
+                                             printRecordTypeList y;
+                                             result := !result ^ " ) : " ^ z ^ " = ";
+                                             spaceCnt := !spaceCnt + 8;
+                                             printExp w)
+    fun printTree
     
     fun prettyPrint fileName =
         let val inStream = TextIO.openIn fileName;

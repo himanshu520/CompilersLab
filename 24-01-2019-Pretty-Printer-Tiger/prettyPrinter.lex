@@ -20,7 +20,7 @@ type lexresult = (svalue, pos) token;
 
 fun eof fileName = Tokens.EOF (!lineNum, !charNum);
 
-fun error_msg str = TextIO.print ("Illegal token " ^ str ^ " found at line number " ^ 
+fun error_msg str = TextIO.print ("Illegal token \"" ^ str ^ "\" found in line " ^ 
                                   (Int.toString (!prevLineNum)) ^ " at position " ^ Int.toString (!prevCharNum) ^
                                   "\n");
 
@@ -63,7 +63,7 @@ ws = [\t\ ];
                                                     charNum := !charNum + size yytext;
                                                     str := !str ^ yytext;
                                                     if (!commentCnt) = 0 then ( YYBEGIN INITIAL;
-                                                                              Tokens.COMMENT (!str, !commentLine, !commentPos))
+                                                                                Tokens.COMMENT (!str, !commentLine, !commentPos))
                                                                          else ( continue () ) );
 <COMMENT> \n                                =>    ( prevLineNum := !lineNum; 
                                                     prevCharNum := !charNum;

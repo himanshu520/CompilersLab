@@ -56,6 +56,8 @@ structure PrettyPrinter = struct
                                                  result := !result ^ " } ";
                                                  spaceCnt := !spaceCnt + 3)
     |   printExp (AST.Assignment (x, y)) =      (printLvalue x;
+                                                 result := !result ^ ":= ";
+                                                 spaceCnt := !spaceCnt + 3;
                                                  printExp y)
     |   printExp (AST.IfThenElse (x, y, z)) =   (result := !result ^ "if ";
                                                  spaceCnt := !spaceCnt + 3;
@@ -99,6 +101,7 @@ structure PrettyPrinter = struct
                                                  spaceCnt := !spaceCnt - 4;
                                                  result := !result ^ "end ";
                                                  spaceCnt := !spaceCnt + 4)
+    |   printExp (AST.Comment x) =              (result := !result ^ x)
 
     and printExps (x::y::xs) =                  (printExp x;
                                                  result := !result ^ "; ";
@@ -204,13 +207,19 @@ structure PrettyPrinter = struct
     |     printOperator AST.Greater =           (result := !result ^ "> ";
                                                  spaceCnt := !spaceCnt + 2)         
     |     printOperator AST.GreaterEqual =      (result := !result ^ ">= ";
-                                                 spaceCnt := !spaceCnt + 2)         
+                                                 spaceCnt := !spaceCnt + 3)         
     |     printOperator AST.LessEqual =         (result := !result ^ "<= ";
+                                                 spaceCnt := !spaceCnt + 3)
+    |     printOperator AST.And =               (result := !result ^ "& ";
+                                                 spaceCnt := !spaceCnt + 2)         
+    |     printOperator AST.Or =                (result := !result ^ "| ";
                                                  spaceCnt := !spaceCnt + 2);
 
 
-    fun printTree tree = (printExp tree; TextIO.print ((!result) ^ "\n\n"));
+    fun printTree (x::xs) = (printExp x; result := !result ^ "\n"; printTree xs)
+    |   printTree _ = TextIO.print ((!result) ^ "\n======COMPLETED======\n");
     
+
     fun prettyPrint fileName =
         let val inStream = TextIO.openIn fileName;
             fun grab n = if TextIO.endOfStream inStream then "" else TextIO.inputN (inStream, n);

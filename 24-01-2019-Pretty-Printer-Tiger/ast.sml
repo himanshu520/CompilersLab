@@ -4,6 +4,7 @@ structure AST = struct
     datatype Exp = Nil
                  | Integer of int
                  | String of string
+                 | Comment of string
                  | Lval of Lvalue
                  | Negation of Exp
                  | Exps of Exp list
@@ -24,7 +25,7 @@ structure AST = struct
 
     and Operator = Plus | Minus | Divide | Multiply |
                    Equals | NotEqual | Greater | Less |
-                   GreaterEqual | LessEqual
+                   GreaterEqual | LessEqual | And | Or
     
     and      Dec = TyDec of TypeDec
                  | VDec of VarDec
@@ -41,5 +42,5 @@ structure AST = struct
                  | FunType of string * ((string * string) list) * string * Exp;
 
 
-    type Program = Exp;
+    type Program = Exp list;
 end

@@ -20,34 +20,53 @@ structure PrettyPrinter = struct
     fun printSpaces cnt = if cnt = 0 then ()
                                      else (result := !result ^ "    "; printSpaces (cnt - 1));
     
-    fun printExp (AST.Nil) pos =                    (result := !result ^ "nil ")
-    |   printExp (AST.Integer x) pos =              (result := !result ^ (Int.toString x) ^ " ")
-    |   printExp (AST.String x) pos =               (result := !result ^ x ^ " ")
-    |   printExp (AST.Lval x) pos =                 (printLvalue x pos)
-    |   printExp (AST.Negation x) pos =             (result := !result ^ "-";
-                                                     printExp x pos)
+    fun printExp (AST.Nil) pos =                    (printSpaces pos;
+                                                     result := !result ^ "nil ")
+    |   printExp (AST.Integer x) pos =              (printSpaces pos;
+                                                     result := !result ^ (Int.toString x) ^ " ")
+    |   printExp (AST.String x) pos =               (printSpaces pos;
+                                                     result := !result ^ x ^ " ")
+    |   printExp (AST.Lval x) pos =                 (printSpaces pos;
+                                                     printLvalue x pos)
+    |   printExp (AST.Negation x) pos =             (printSpaces pos;
+                                                     result := !result ^ "-";
+                                                     printExp x 0)
     |   printExp (AST.Exps x) pos =                 (printSpaces pos;
                                                      result := !result ^ "( ";
                                                      printExps x (pos + 1);
                                                      printSpaces pos; 
-                                                     result := !result ^ ") ")
+                                                     result := !result ^ ") \n")
     |   printExp (AST.FunCall (x, y)) pos =         (printSpaces pos;
                                                      result := !result ^ x ^ " ( ";
                                                      printExpList y;
                                                      result := !result ^ ") ")
-    |   printExp (AST.App (x, y, z)) pos =          (printExp x (pos + 1);
+    |   printExp (AST.App (x, y, z)) pos =          (printExp x pos;
                                                      printOperator y;
-                                                     printExp z (pos + 1))
-    |   printExp (AST.Array (x, y, z)) pos =        (result := !result ^ "array " ^ x ^ " [ ";
-                                                     printExp y (pos + 1);
+                                                     printExp z 0)
+    |   printExp (AST.Array (x, y, z)) pos =        (printSpaces pos;
+                                                     result := !result ^ "array " ^ x ^ " [ ";
+                                                     printExp y 0;
                                                      result := !result ^ " ] of ";
-                                                     printExp z (pos + 1))
-    |   printExp (AST.Record (x, y)) pos =          (result := !result ^ x ^ " { ";
+                                                     printExp z 0)
+    |   printExp (AST.Record (x, y)) pos =          (printSpaces pos;
+                                                     result := !result ^ x ^ " { ";
                                                      printStringExpList y;
                                                      result := !result ^ " } ")
-    |   printExp (AST.Assignment (x, y)) pos =      (printLvalue x;
+    |   printExp (AST.Assignment (x, y)) pos =      (printSpaces pos;
+                                                     printLvalue x 0;
                                                      result := !result ^ ":= ";
-                                                     printExp y (pos + 1))
+                                                     case y of 
+                                                        AST.Nil          => printExp y 0 |
+                                                        AST.Integer _    => printExp y 0 |
+                                                        AST.String _     => printExp y 0 |
+                                                        AST.Lval _       => printExp y 0 |
+                                                        AST.Negation _   => printExp y 0 |
+                                                        AST.FunCall _    => printExp y 0 |
+                                                        AST.Array _      => printExp y 0 |
+                                                        AST.App _        => printExp y 0 |
+                                                        AST.Record _     => printExp y 0 |
+                                                        _                => (result := !result ^ "\n";
+                                                                            printExp y (pos + 1)))
     |   printExp (AST.IfThenElse (x, y, z)) pos =   (printSpaces pos;
                                                      result := !result ^ "if\n";
                                                      printExp x (pos + 1);
@@ -93,7 +112,7 @@ structure PrettyPrinter = struct
                                                      result := !result ^ "\b;\n";
                                                      printExps (y::xs) pos)
     |   printExps (x::xs) pos =                     (printExp x pos;
-                                                     result := !result ^ "\n")
+                                                     result := !result ^ "\b\n")
     |   printExps _ _ =                             ()
 
     and printExpList (x::y::xs) =                   (printExp x 0;
@@ -155,13 +174,35 @@ structure PrettyPrinter = struct
                                                      result := !result ^ "function " ^ x ^ " ( ";
                                                      printRecordTypeList y;
                                                      result := !result ^ " ) = ";
-                                                     printExp z (pos + 1);
+                                                     case z of 
+                                                        AST.Nil          => printExp z 0 |
+                                                        AST.Integer _    => printExp z 0 |
+                                                        AST.String _     => printExp z 0 |
+                                                        AST.Lval _       => printExp z 0 |
+                                                        AST.Negation _   => printExp z 0 |
+                                                        AST.FunCall _    => printExp z 0 |
+                                                        AST.Array _      => printExp z 0 |
+                                                        AST.App _        => printExp z 0 |
+                                                        AST.Record _     => printExp z 0 |
+                                                        _                => (result := !result ^ "\n";
+                                                                             printExp z (pos + 1));
                                                      result := !result ^ "\n")
     |   printFDec (AST.FunType (x, y, z, w)) pos =  (printSpaces pos;
                                                      result := !result ^ "function " ^ x ^ " ( ";
                                                      printRecordTypeList y;
                                                      result := !result ^ " ) : " ^ z ^ " = ";
-                                                     printExp w (pos + 1);
+                                                     case w of 
+                                                        AST.Nil          => printExp w 0 |
+                                                        AST.Integer _    => printExp w 0 |
+                                                        AST.String _     => printExp w 0 |
+                                                        AST.Lval _       => printExp w 0 |
+                                                        AST.Negation _   => printExp w 0 |
+                                                        AST.FunCall _    => printExp w 0 |
+                                                        AST.Array _      => printExp w 0 |
+                                                        AST.App _        => printExp w 0 |
+                                                        AST.Record _     => printExp w 0 |
+                                                        _                => (result := !result ^ "\n";
+                                                                            printExp w (pos + 1));
                                                      result := !result ^ "\n")
 
     and   printOperator AST.Plus =                  (result := !result ^ "+ ")

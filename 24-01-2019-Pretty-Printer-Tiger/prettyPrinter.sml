@@ -161,13 +161,15 @@ structure PrettyPrinter = struct
     |   printTyDec (AST.RecordType (x, y)) =    (result := !result ^ "type " ^ x ^ " = { ";
                                                  spaceCnt := !spaceCnt + 10;
                                                  printRecordTypeList y;
-                                                 result := !result ^ "} ";
+                                                 result := !result ^ " } ";
                                                  spaceCnt := !spaceCnt + 2)
 
     and printRecordTypeList ((x, y)::z::xs)=    (result := !result ^ x ^ " = " ^ y ^ ", ";
-                                                 spaceCnt := !spaceCnt + size x + size y + 5)
+                                                 spaceCnt := !spaceCnt + size x + size y + 5;
+                                                 printRecordTypeList (z::xs))
     |   printRecordTypeList ((x, y)::xs) =      (result := !result ^ x ^ " = " ^ y;
-                                                 spaceCnt := !spaceCnt + size x + size y + 3)
+                                                 spaceCnt := !spaceCnt + size x + size y + 3;
+                                                 printRecordTypeList xs)
     |   printRecordTypeList _ =                 ()
 
     and printVDec (AST.Var (x, y)) =            (result := !result ^ "var " ^ x ^ " := ";

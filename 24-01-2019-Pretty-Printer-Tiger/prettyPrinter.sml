@@ -71,30 +71,36 @@ structure PrettyPrinter = struct
     |   printExp (AST.IfThenElse (x, y, z)) pos =   (printSpaces pos;
                                                      result := !result ^ "if\n";
                                                      printExp x (pos + 1);
+                                                     result := !result ^ "\n";
                                                      printSpaces pos;
                                                      result := !result ^ "then\n";
                                                      printExp y (pos + 1);
+                                                     result := !result ^ "\n";
                                                      printSpaces pos;
                                                      result := !result ^ "else\n";
                                                      printExp z (pos + 1))
     |   printExp (AST.IfThen (x, y)) pos =          (printSpaces pos;
                                                      result := !result ^ "if\n";
                                                      printExp x (pos + 1);
+                                                     result := !result ^ "\n";
                                                      printSpaces pos;
                                                      result := !result ^ "then\n";
                                                      printExp y (pos + 1))
     |   printExp (AST.While (x, y)) pos =           (printSpaces pos;
                                                      result := !result ^ "while\n";
                                                      printExp x (pos + 1);
+                                                     result := !result ^ "\n";
                                                      printSpaces pos;
                                                      result := !result ^ "do\n";
                                                      printExp y (pos + 1))
     |   printExp (AST.For (x, y, z, w)) pos =       (printSpaces pos;
                                                      result := !result ^ "for " ^ x ^ " :=\n";
                                                      printExp y (pos + 1);
+                                                     result := !result ^ "\n";
                                                      printSpaces pos;
                                                      result := !result ^ "to\n";
                                                      printExp z (pos + 1);
+                                                     result := !result ^ "\n";
                                                      printSpaces pos;
                                                      result := !result ^ "do\n";
                                                      printExp w (pos + 1))
@@ -163,11 +169,35 @@ structure PrettyPrinter = struct
 
     and printVDec (AST.Var (x, y)) pos =            (printSpaces pos;
                                                      result := !result ^ "var " ^ x ^ " := ";
-                                                     printExp y (pos + 1);
+                                                     case y of 
+                                                        AST.Nil          => printExp y 0 |
+                                                        AST.Integer _    => printExp y 0 |
+                                                        AST.String _     => printExp y 0 |
+                                                        AST.Lval _       => printExp y 0 |
+                                                        AST.Negation _   => printExp y 0 |
+                                                        AST.FunCall _    => printExp y 0 |
+                                                        AST.Array _      => printExp y 0 |
+                                                        AST.App _        => printExp y 0 |
+                                                        AST.Record _     => printExp y 0 |
+                                                        _                => (result := !result ^ "\n";
+                                                                             printExp y (pos + 1);
+                                                                             result := !result ^ "\n");
                                                      result := !result ^ "\n")
     |   printVDec (AST.VarType (x, y, z)) pos =     (printSpaces pos;
                                                      result := !result ^ "var " ^ x ^ " : " ^ y ^ " := ";
-                                                     printExp z (pos + 1);
+                                                     case z of 
+                                                        AST.Nil          => printExp z 0 |
+                                                        AST.Integer _    => printExp z 0 |
+                                                        AST.String _     => printExp z 0 |
+                                                        AST.Lval _       => printExp z 0 |
+                                                        AST.Negation _   => printExp z 0 |
+                                                        AST.FunCall _    => printExp z 0 |
+                                                        AST.Array _      => printExp z 0 |
+                                                        AST.App _        => printExp z 0 |
+                                                        AST.Record _     => printExp z 0 |
+                                                        _                => (result := !result ^ "\n";
+                                                                             printExp z (pos + 1);
+                                                                             result := !result ^ "\n");
                                                      result := !result ^ "\n")
 
     and printFDec (AST.Fun (x, y, z)) pos =         (printSpaces pos;

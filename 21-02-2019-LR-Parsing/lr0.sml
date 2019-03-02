@@ -30,4 +30,21 @@ fun goto (st, x) = let
                      closure (!nst))
                 end;
 
-                 
+(* function to add a new row (corresponding to a new state in the LR table *)
+fun addRowLrTable x = if (!StateMap.cnt) > x then ()
+                      else 
+                        let fun addCol y = lrTable := LRTable.insert (!lrTable, (x, y), ref LRTableEl.empty)
+                        in List.app addCol (AtomSet.listItems (AtomSet.union (#symbols grammar, #tokens grammar))) end;
+
+fun computeLrTable stNum = if stNum >= !(StateMap.cnt) then ()
+                           else let 
+                                    val state = StateMap.getItem stNum
+                                    fun addEdge x = let val nSt = StateMap.getProxy (goto (state, x));
+                                                        val ent:actions = if AtomSet.member (#symbols grammar, x) then (Goto nSt) else (Shift nSt);
+                                                        val old = LRTable.lookup (!lrTable, (stNum, x));
+                                                        val new = LRTableEl.add (!old, ent);
+                                                    in (LRTable.lookup (!lrTable, (stNum, x))) := new end;
+                                in (List.app addEdge (AtomSet.listItems (AtomSet.union (#symbols grammar, #tokens grammar))); computeLrTable (stNum + 1)) end;
+                                    
+
+                            

@@ -20,15 +20,17 @@ fun closure st = let
                  end;
 
 (* function to calculate goto(st, x) where st is a state and x is a terminal or non-terminal *)
-fun goto (st, x) = let 
-                    val nst = ref State.empty;
-                    val lrItems = State.listItems st;
-                    fun proc {lhs = z, before = ys, after = x::xs } = nst := State.add (!nst, { lhs = z, before = x::ys, after = xs})
-                    |   proc _ = ();
-                in 
-                    (List.app proc lrItems; 
-                     closure (!nst))
-                end;
+fun goto (st, x) = if Atom.compare (x, Atom.atom "$") = EQUAL 
+                   then let val stNum = StateMap.getProxy st;
+                            val old = LRTable.lookup (!lrTable, (stNum, Atom.atom "$"));
+                            val new = LRTableEl.add (!old, Accept);
+                        in ((LRTable.lookup (!lrTable, (stNum, Atom.atom "$"))) := new; State.empty) end
+                   else let 
+                            val nst = ref State.empty;
+                            val lrItems = State.listItems st;
+                            fun proc {lhs = z, before = ys, after = x::xs } = nst := State.add (!nst, { lhs = z, before = x::ys, after = xs})
+                            |   proc _ = ();
+                        in (List.app proc lrItems; closure (!nst)) end;
 
 (* function to add a new row (corresponding to a new state in the LR table *)
 fun addRowLrTable x = if (!StateMap.cnt) > x then ()

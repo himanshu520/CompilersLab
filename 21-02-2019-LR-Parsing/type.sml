@@ -78,6 +78,7 @@ end;
 signature STATE_MAP = sig
     type proxy;
     type item;
+    val cnt : proxy ref;
     val getProxy : item -> proxy;
     val getItem : proxy -> item;
 end;
@@ -102,6 +103,7 @@ functor Proxy (ARG_KEY : ORD_KEY) : STATE_MAP = struct
                              cnt := !cnt + 1);
                        proxyMap.lookup(!fmap, it));
     fun getItem prx = itemMap.lookup (!rmap, prx);
+    fun getList () = proxyMap.listItems (!fmap);
 end;
 
 structure StateMap = Proxy(STATE_KEY);
@@ -109,7 +111,7 @@ structure RuleMap = Proxy(RULE_KEY);
 
 
 (* Datatype for transitions *)
-datatype actions = shift of int | goto of int | reduce of int | Accept of int
+datatype actions = Shift of int | Goto of int | Reduce of int | Accept
 
 
 (* Datatype for LR0 table - it would be a map from (int * atom) to actions *)
@@ -119,5 +121,20 @@ structure LR_TABLE_KEY = struct
                                        else Int.compare (xi, yi);
 end;
 
+structure LR_TABLE_EL_KEY = struct
+    type ord_key = actions;
+    fun compare (Shift x, Shift y) = Int.compare (x, y)
+    |   compare (Shift x, _) = GREATER
+    |   compare (_, Shift x) = LESS
+    |   compare (Goto x, Goto y) = Int.compare (x, y)
+    |   compare (Goto x, _) = GREATER
+    |   compare (_, Goto x) = LESS
+    |   compare (Reduce x, Reduce y) = Int.compare (x, y)
+    |   compare (Reduce x, _) = GREATER
+    |   compare (_, Reduce x) = LESS
+    |   compare (_, _) = EQUAL;
+end;
+
 structure LRTable = RedBlackMapFn(LR_TABLE_KEY);
-val lrTable : actions LRTable.map = LRTable.empty;
+structure LRTableEl = RedBlackSetFn(LR_TABLE_EL_KEY);
+val lrTable : LRTableEl.set ref LRTable.map ref = ref LRTable.empty;

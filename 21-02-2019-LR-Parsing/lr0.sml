@@ -38,6 +38,7 @@ fun addRowLrTable x = if (!StateMap.cnt) > x then ()
                         let fun addCol y = lrTable := LRTable.insert (!lrTable, (x, y), ref LRTableEl.empty)
                         in List.app addCol (AtomSet.listItems (AtomSet.union (#symbols grammar, #tokens grammar))) end;
 
+(* Function to fill the LR0 table with shift, accept and goto actions *)
 fun computeLrTable stNum = if stNum >= !(StateMap.cnt) then ()
                            else let 
                                     val state = StateMap.getItem stNum
@@ -48,6 +49,7 @@ fun computeLrTable stNum = if stNum >= !(StateMap.cnt) then ()
                                                     in (LRTable.lookup (!lrTable, (stNum, x))) := new end;
                                 in (List.app addEdge (AtomSet.listItems (AtomSet.union (#symbols grammar, #tokens grammar))); computeLrTable (stNum + 1)) end;
                                     
+(* Function to fill the LR0 table with reduce actions *)
 fun addReduceActions stNum = if stNum >= !(StateMap.cnt) then ()
                              else let 
                                     val itemList = State.listItems (StateMap.getItem stNum);
@@ -58,3 +60,12 @@ fun addReduceActions stNum = if stNum >= !(StateMap.cnt) then ()
                                                                                         in List.app addRedTable (AtomSet.listItems (#tokens grammar)) end
                                     |   procItem _ = ();
                                   in List.app procItem itemList end;
+
+(* Function to fill the numerical encoding of the grammar rules *)
+fun printGrammar () = let val grm = RuleMap.getList ();
+                          fun printAtom x = TextIO.print ((Atom.toString x) ^ " ");
+                          val printAtomList = List.app printAtom;
+                          fun printRule ((x, y), z) = (TextIO.print ("(" ^ (Int.toString z) ^ ") "); printAtom x; TextIO.print ("--> "); printAtomList y; TextIO.print "\n");
+                      in (TextIO.print "\n\n======== The grammar rules are ========\n"; List.app printRule grm; TextIO.print "=======================================\n\n") end;
+
+printGrammar ();

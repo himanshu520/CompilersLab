@@ -60,10 +60,19 @@ end
 
 structure State = RedBlackSetFn(ITEM_KEY);
 
-(* Map to maintain state number *)
+(* Structure to maintain states and grammar rules *)
 structure STATE_KEY : ORD_KEY = struct
     type ord_key = State.set;
     val compare = State.compare;
+end;
+
+structure RULE_KEY : ORD_KEY = struct
+    type ord_key = Atom.atom * RHS;
+    fun compare (x : ord_key, y : ord_key) = let val lhsCmp = Atom.compare (#1 x, #1 y)
+                                                in
+                                                    if lhsCmp <> EQUAL then lhsCmp
+                                                    else List.collate Atom.lexCompare (#2 x, #2 y)
+                                                end;
 end;
 
 signature STATE_MAP = sig
@@ -96,3 +105,8 @@ functor Proxy (ARG_KEY : ORD_KEY) : STATE_MAP = struct
 end;
 
 structure StateMap = Proxy(STATE_KEY);
+structure RuleMap = Proxy(RULE_KEY);
+
+
+(* Datatype for transitions *)
+datatype actions = shift of int | goto of int | reduce of int | Accept of int

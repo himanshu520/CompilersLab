@@ -46,5 +46,13 @@ fun computeLrTable stNum = if stNum >= !(StateMap.cnt) then ()
                                                     in (LRTable.lookup (!lrTable, (stNum, x))) := new end;
                                 in (List.app addEdge (AtomSet.listItems (AtomSet.union (#symbols grammar, #tokens grammar))); computeLrTable (stNum + 1)) end;
                                     
-
-                            
+fun addReduceActions stNum = if stNum >= !(StateMap.cnt) then ()
+                             else let 
+                                    val itemList = State.listItems (StateMap.getItem stNum);
+                                    fun procItem { lhs = z, before = x, after = nil } = let val rl = RuleMap.getProxy (z, x)
+                                                                                            fun addRedTable t = let val old = LRTable.lookup (!lrTable, (stNum, t));
+                                                                                                                    val new = LRTableEl.add (!old, Reduce rl);
+                                                                                                                in (LRTable.lookup (!lrTable, (stNum, t))) := new end;
+                                                                                        in List.app addRedTable (AtomSet.listItems (#tokens grammar)) end
+                                    |   procItem _ = ();
+                                  in List.app procItem itemList end;

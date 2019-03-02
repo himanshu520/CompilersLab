@@ -33,3 +33,66 @@ type Rules = Productions AtomMap.map;
                                                      - a set of atoms representing all tokens in the grammar
                                                      - a map of type Rules to represent all the grammar rules. *)
 type Grammar = { symbols : AtomSet.set, tokens : AtomSet.set, rules : Rules };
+
+
+
+
+(* Datatype to represent an LR(0) item 
+   lhs represent the left hand side non-terminal of a production
+   before represents the symbols on the rhs before the dot stored in reverse order for easy insertion in the end 
+   after represents the symbols on the rhs after the dot stored in the same order *)
+type Item = { lhs : Atom.atom, before : Atom.atom list, after : Atom.atom list };
+
+(* Datatype to represent represent a state 
+   First the comparison function for the items of the state is defined and then the actual structure is created *)
+structure ITEM_KEY : ORD_KEY = struct
+    type ord_key = Item;
+    fun compare (x : ord_key, y : ord_key) = let val lhsCmp = Atom.compare (#lhs x, #lhs y)
+                                                in 
+                                                    if  lhsCmp <> EQUAL then lhsCmp
+                                                    else let val beforeCmp = List.collate Atom.lexCompare (#before x, #before y)
+                                                        in
+                                                            if beforeCmp <> EQUAL then beforeCmp
+                                                            else List.collate Atom.lexCompare (#after x, #after y)
+                                                        end
+                                                end
+end
+
+structure State = RedBlackSetFn(ITEM_KEY);
+
+(* Map to maintain state number *)
+structure STATE_KEY : ORD_KEY = struct
+    type ord_key = State.set;
+    val compare = State.compare;
+end;
+
+signature STATE_MAP = sig
+    type proxy;
+    type item;
+    val getProxy : item -> proxy;
+    val getItem : proxy -> item;
+end;
+
+functor Proxy (ARG_KEY : ORD_KEY) : STATE_MAP = struct
+    type proxy = int;
+    val proxyCmp = Int.compare;
+    type item = ARG_KEY.ord_key;
+    val cnt = ref 0;
+    structure PROXY_KEY = struct
+        type ord_key = proxy
+        val compare = proxyCmp;
+    end;
+    structure proxyMap = RedBlackMapFn (ARG_KEY);
+    structure itemMap = RedBlackMapFn (PROXY_KEY);
+    val fmap : proxy proxyMap.map ref = ref proxyMap.empty;
+    val rmap : item itemMap.map ref = ref itemMap.empty;
+    fun getProxy it = (if proxyMap.inDomain (!fmap, it) 
+                       then ()
+                       else (fmap := proxyMap.insert (!fmap, it, !cnt);
+                             rmap := itemMap.insert (!rmap, !cnt, it);
+                             cnt := !cnt + 1);
+                       proxyMap.lookup(!fmap, it));
+    fun getItem prx = itemMap.lookup (!rmap, prx);
+end;
+
+structure StateMap = Proxy(STATE_KEY);

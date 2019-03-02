@@ -33,7 +33,7 @@ fun goto (st, x) = if Atom.compare (x, Atom.atom "$") = EQUAL
                         in (List.app proc lrItems; closure (!nst)) end;
 
 (* function to add a new row (corresponding to a new state in the LR table *)
-fun addRowLrTable x = if (!StateMap.cnt) > x then ()
+fun addRowLrTable x = if (!StateMap.cnt) >= x then ()
                       else 
                         let fun addCol y = lrTable := LRTable.insert (!lrTable, (x, y), ref LRTableEl.empty)
                         in List.app addCol (AtomSet.listItems (AtomSet.union (#symbols grammar, #tokens grammar))) end;
@@ -68,4 +68,31 @@ fun printGrammar () = let val grm = RuleMap.getList ();
                           fun printRule ((x, y), z) = (TextIO.print ("(" ^ (Int.toString z) ^ ") "); printAtom x; TextIO.print ("--> "); printAtomList y; TextIO.print "\n");
                       in (TextIO.print "\n\n======== The grammar rules are ========\n"; List.app printRule grm; TextIO.print "=======================================\n\n") end;
 
-printGrammar ();
+(* Function to print a given state of the grammar *)
+fun printState stNum = let val lrItems = State.listItems (StateMap.getItem stNum);
+                           fun printAtom x = TextIO.print ((Atom.toString x) ^ " ");
+                           val printAtomList = List.app printAtom;
+                           fun printLrItem { lhs = x, before = y, after = z } = (printAtom x; TextIO.print "--> "; printAtomList (List.rev y); TextIO.print ". "; printAtomList z; TextIO.print "\n");
+                           fun printAction (Reduce x) = TextIO.print ("r" ^ (Int.toString x))
+                           |   printAction (Shift x) = TextIO.print ("s" ^ (Int.toString x)) 
+                           |   printAction (Goto x) = TextIO.print ("g" ^ (Int.toString x)) 
+                           |   printAction _ = TextIO.print ("a"); 
+                           fun printActions (x::y::xs) = (printAction x; TextIO.print ", ")
+                           |   printActions (x::xs) = printAction x
+                           |   printActions _ = ();
+                           fun printActionPair (x, y) = (printAtom x; TextIO.print ": "; printActions y; TextIO.print "\n");
+                           fun printActionForSym x = printActionPair (x, LRTableEl.listItems (!(LRTable.lookup (!lrTable, (stNum, x)))));
+                           fun printActionState () = List.app printActionForSym (AtomSet.listItems (AtomSet.union (#symbols grammar, #tokens grammar)));
+                       in ( TextIO.print ("\n\n=============== State" ^ (Int.toString stNum) ^ "=================\n");
+                            List.app printLrItem lrItems;
+                            TextIO.print ("\n----------------------------------------------------\n");
+                            printActionState ();
+                            TextIO.print ("\n================================================================\n\n"))
+                       end;
+
+
+(* Function to print the LR0 table *)
+fun printLrTable stNum = if stNum >= !(StateMap.cnt) then ()
+                         else (printState stNum; printLrTable (stNum + 1));
+
+(printGrammar (); computeLrTable 0; addReduceActions 0; printLrTable 0);

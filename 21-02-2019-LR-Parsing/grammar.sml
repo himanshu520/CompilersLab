@@ -7,7 +7,6 @@
 val sym = ref AtomSet.empty;
 sym := AtomSet.addList (!sym, [Atom.atom "S", Atom.atom "E", Atom.atom "F", Atom.atom "X"]);
 
-
 (* Set of atoms to represent the tokens in the grammar. *)
 val tok = ref AtomSet.empty;
 tok := AtomSet.addList (!tok, [Atom.atom "a", Atom.atom "b", Atom.atom "(", Atom.atom ")", Atom.atom "$"]);
@@ -18,18 +17,23 @@ tok := AtomSet.addList (!tok, [Atom.atom "a", Atom.atom "b", Atom.atom "(", Atom
    added successively. *)
 val S_ = ref RHSSet.empty;
 S_ := RHSSet.add (!S_, [Atom.atom "E", Atom.atom "$"]);
+RuleMap.getProxy (Atom.atom "S", [Atom.atom "E", Atom.atom "$"]);
 
 val E_ = ref RHSSet.empty;
 E_ := RHSSet.add (!E_, [Atom.atom "X", Atom.atom "F"]);
+RuleMap.getProxy (Atom.atom "E", [Atom.atom "X", Atom.atom "F"]);
 
 val F_ = ref RHSSet.empty;
 F_ := RHSSet.add (!F_, [Atom.atom "EPS"]);
 F_ := RHSSet.add (!F_, [Atom.atom "a", Atom.atom "E"]);
+RuleMap.getProxy (Atom.atom "F", []);
+RuleMap.getProxy (Atom.atom "F", [Atom.atom "a", Atom.atom "E"]);
 
 val X_ = ref RHSSet.empty;
 X_ := RHSSet.add (!X_, [Atom.atom "(", Atom.atom "E", Atom.atom ")"]);
 X_ := RHSSet.add (!X_, [Atom.atom "b"]);
-
+RuleMap.getProxy (Atom.atom "X", [Atom.atom "(", Atom.atom "E", Atom.atom ")"]);
+RuleMap.getProxy (Atom.atom "X", [Atom.atom "b"]);
 
 (* Rules corresponding to all the symbols - of type Rules.
    First an empty map is created and then the rules for all the symbols are added successively. *)

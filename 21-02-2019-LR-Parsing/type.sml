@@ -110,3 +110,14 @@ structure RuleMap = Proxy(RULE_KEY);
 
 (* Datatype for transitions *)
 datatype actions = shift of int | goto of int | reduce of int | Accept of int
+
+
+(* Datatype for LR0 table - it would be a map from (int * atom) to actions *)
+structure LR_TABLE_KEY = struct
+    type ord_key = int * Atom.atom
+    fun compare ((xi, xa), (yi, ya)) = if Int.compare (xi, yi) = EQUAL then Atom.compare (xa, ya)
+                                       else Int.compare (xi, yi);
+end;
+
+structure LRTable = RedBlackMapFn(LR_TABLE_KEY);
+val lrTable : actions LRTable.map = LRTable.empty;

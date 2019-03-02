@@ -81,6 +81,7 @@ signature STATE_MAP = sig
     val cnt : proxy ref;
     val getProxy : item -> proxy;
     val getItem : proxy -> item;
+    val getList : unit -> (item * proxy) list;
 end;
 
 functor Proxy (ARG_KEY : ORD_KEY) : STATE_MAP = struct
@@ -103,7 +104,7 @@ functor Proxy (ARG_KEY : ORD_KEY) : STATE_MAP = struct
                              cnt := !cnt + 1);
                        proxyMap.lookup(!fmap, it));
     fun getItem prx = itemMap.lookup (!rmap, prx);
-    fun getList () = proxyMap.listItems (!fmap);
+    fun getList () = proxyMap.listItemsi (!fmap);
 end;
 
 structure StateMap = Proxy(STATE_KEY);

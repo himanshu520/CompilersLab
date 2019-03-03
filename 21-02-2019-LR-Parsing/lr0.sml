@@ -1,3 +1,4 @@
+(* This file contains functions that computes and print the LR(0) parsing table for a grammar in file grammar.sml *)
 use "type.sml";
 use "grammar.sml";
 
@@ -109,5 +110,6 @@ fun printLrTable stNum = if stNum >= !(StateMap.cnt) then ()
                          else (printState stNum; printLrTable (stNum + 1));
 
 
+(* Using the functions above to create and print the LR(0) parsing table *)
 StateMap.getProxy (closure (!initialStateLr0));
 (computeLrTable 1; addReduceActions 1; printGrammar (); printLrTable 1);

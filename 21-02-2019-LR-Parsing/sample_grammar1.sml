@@ -13,7 +13,7 @@ sym := AtomSet.addList (!sym, [Atom.atom "T", Atom.atom "S", Atom.atom "L"]);
 
 (* Set of atoms to represent the tokens in the grammar. *)
 val tok = ref AtomSet.empty;
-tok := AtomSet.addList (!tok, [Atom.atom "(", Atom.atom ")", Atom.atom ",", Atom.atom "x", Atom.atom "d"]);
+tok := AtomSet.addList (!tok, [Atom.atom "(", Atom.atom ")", Atom.atom ",", Atom.atom "x", Atom.atom "$"]);
 
 
 

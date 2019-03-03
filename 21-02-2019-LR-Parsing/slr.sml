@@ -1,5 +1,8 @@
+(* This file contains functions to calculate and print SLR table of a grammar in file grammar.sml *)
+
 use "type.sml";
 use "grammar.sml";
+use "faf.sml";
 
 
 (* function to find the closure of a state *)
@@ -65,9 +68,11 @@ fun addReduceActions stNum = if stNum >= !(StateMap.cnt) then ()
                              else let 
                                     val itemList = State.listItems (StateMap.getItem stNum);
                                     fun procItem { lhs = z, before = x, after = nil } = let val rl = RuleMap.getProxy (z, List.rev x)
-                                                                                            fun addRedTable t = let val old = LRTable.lookup (!lrTable, (stNum, t));
-                                                                                                                    val new = LRTableEl.add (!old, Reduce rl);
-                                                                                                                in (LRTable.lookup (!lrTable, (stNum, t))) := new end;
+                                                                                            val followSet = !(AtomMap.lookup (!follow, z))
+                                                                                            fun addRedTable t = if not (AtomSet.member (followSet, t)) then ()
+                                                                                                                else let val old = LRTable.lookup (!lrTable, (stNum, t));
+                                                                                                                         val new = LRTableEl.add (!old, Reduce rl);
+                                                                                                                     in (LRTable.lookup (!lrTable, (stNum, t))) := new end;
                                                                                         in List.app addRedTable (AtomSet.listItems (#tokens grammar)) end
                                     |   procItem _ = ();
                                   in (List.app procItem itemList; addReduceActions (stNum + 1)) end;

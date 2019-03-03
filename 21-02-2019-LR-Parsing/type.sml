@@ -108,6 +108,7 @@ functor Proxy (ARG_KEY : ORD_KEY) : STATE_MAP = struct
 end;
 
 structure StateMap = Proxy(STATE_KEY);
+StateMap.getProxy State.empty;
 structure RuleMap = Proxy(RULE_KEY);
 
 

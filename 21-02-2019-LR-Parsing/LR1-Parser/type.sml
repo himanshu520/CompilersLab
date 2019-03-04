@@ -41,7 +41,7 @@ type Grammar = { symbols : AtomSet.set, tokens : AtomSet.set, rules : Rules };
    lhs represent the left hand side non-terminal of a production
    before represents the symbols on the rhs before the dot stored in reverse order for easy insertion in the end 
    after represents the symbols on the rhs after the dot stored in the same order *)
-type Item = { lhs : Atom.atom, before : Atom.atom list, after : Atom.atom list };
+type Item = { lhs : Atom.atom, before : Atom.atom list, after : Atom.atom list, lookahead : Atom.atom };
 
 (* Datatype to represent represent a state 
    First the comparison function for the items of the state is defined and then the actual structure is created *)
@@ -50,10 +50,16 @@ structure ITEM_KEY : ORD_KEY = struct
     fun compare (x : ord_key, y : ord_key) = let val lhsCmp = Atom.compare (#lhs x, #lhs y)
                                                 in 
                                                     if  lhsCmp <> EQUAL then lhsCmp
-                                                    else let val beforeCmp = List.collate Atom.lexCompare (#before x, #before y)
+                                                    else 
+                                                        let val lookaheadCmp = Atom.compare (#lookahead x, #lookahead y) 
                                                         in
-                                                            if beforeCmp <> EQUAL then beforeCmp
-                                                            else List.collate Atom.lexCompare (#after x, #after y)
+                                                            if lookaheadCmp <> EQUAL then lookaheadCmp
+                                                            else
+                                                                let val beforeCmp = List.collate Atom.lexCompare (#before x, #before y)
+                                                                in
+                                                                    if beforeCmp <> EQUAL then beforeCmp
+                                                                    else List.collate Atom.lexCompare (#after x, #after y)
+                                                                end
                                                         end
                                                 end
 end

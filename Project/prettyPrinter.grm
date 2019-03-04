@@ -1,0 +1,175 @@
+(* This is the preamble where you can have arbitrary sml code. For us
+it is empty *)
+
+%%
+
+(* Name of the parser *)
+%name PrettyPrinter
+
+(* Produces verbose description of the generated LALR parser *)
+%verbose
+
+(* type to capture the position of a token within a file *)
+%pos int
+
+(* The terminals or tokens of the language.
+   Similar to ML datatype declaration.
+   The terminals with no datatype have no value associated with them *)
+%term INTEGER of int
+    | ID of string
+    | STRING of string
+    | COMMENT of string
+    | ARRAY
+    | BREAK
+    | DO
+    | ELSE
+    | END
+    | FOR
+    | FUNCTION
+    | IF
+    | IN
+    | LET
+    | NIL
+    | OF
+    | THEN
+    | TO
+    | TYPE
+    | VAR
+    | WHILE
+    | NOTEQUAL
+    | LESSEQUAL
+    | GREATEREQUAL
+    | ASSIGN
+    | LPAREN
+    | RPAREN
+    | LBRACES
+    | RBRACES
+    | LBRACKETS
+    | RBRACKETS
+    | COLON
+    | DOT
+    | SEMICOLON
+    | COMMA
+    | PLUS
+    | MINUS
+    | EQUALS
+    | MULTIPLY
+    | DIVIDE 
+    | LESS
+    | GREATER
+    | AND
+    | OR
+    | EOF
+    
+(* The nonterminals or symbols of the language.
+   The types for the nonterminals are the correspoding abstract syntax used to capture the semantic 
+   meaning of the values associated with the nonterminal *)
+%nonterm PROGRAM                of AST.Program
+       | EXP                    of AST.Exp
+       | EXPS                   of AST.Exp list
+       | EXPC                   of AST.Exp list
+       | LVALUE                 of AST.Lvalue
+       | RECORDFIELDDEC         of (string * AST.Exp) list
+       | RECORDFIELDCREATE      of (string * string) list
+       | DEC                    of AST.Dec
+       | DECS                   of AST.Dec list
+       | TYPEDEC                of AST.TypeDec
+       | FUNDEC                 of AST.FunDec
+       | VARDEC                 of AST.VarDec
+       | OPERATOR               of AST.Operator
+
+%eop EOF                (* the set of terminals that may follow the start symbol *)
+%pure                   (* the semantic actions are free of significant side-effects and always terminate *)
+%noshift EOF            (* non-shiftable terminals *)
+%arg (fileName) : string
+
+
+(* Specifying the precedence and associativity of operators *)
+%left OR
+%left AND 
+%nonassoc GREATEREQUAL LESSEQUAL EQUALS NOTEQUAL LESS GREATER
+%left PLUS MINUS
+%left MULTIPLY DIVIDE
+%left ASSIGN
+
+%%
+
+(* The grammar associated with our program *)
+PROGRAM : EXP                                       ( [EXP] )
+        | EXP PROGRAM                               ( EXP :: PROGRAM )
+
+EXP     : NIL                                       ( AST.Nil )
+        | INTEGER                                   ( AST.Integer INTEGER )
+        | STRING                                    ( AST.String STRING )
+        | LVALUE                                    ( AST.Lval LVALUE ) 
+        | MINUS EXP                                 ( AST.Negation EXP ) 
+        | LPAREN EXPS RPAREN                        ( AST.Exps EXPS )
+        | LPAREN RPAREN                             ( AST.Exps nil )
+        | ID LPAREN EXPC RPAREN                     ( AST.FunCall (ID, EXPC) )
+        | ID LPAREN RPAREN                          ( AST.FunCall (ID, nil) )
+        | EXP OPERATOR EXP                          ( AST.App (EXP1, OPERATOR, EXP2) )
+        | ID LBRACKETS EXP RBRACKETS OF EXP         ( AST.Array (ID, EXP1, EXP2) )
+        | ID LBRACES RECORDFIELDDEC RBRACES         ( AST.Record (ID, RECORDFIELDDEC) )
+        | LVALUE ASSIGN EXP                         ( AST.Assignment (LVALUE, EXP) )
+        | IF EXP THEN EXP ELSE EXP                  ( AST.IfThenElse (EXP1, EXP2, EXP3) )
+        | IF EXP THEN EXP                           ( AST.IfThen (EXP1, EXP2) )
+        | WHILE EXP DO EXP                          ( AST.While (EXP1, EXP2) )
+        | FOR ID ASSIGN EXP TO EXP DO EXP           ( AST.For (ID, EXP1, EXP2, EXP3) )
+        | LET DECS IN EXPS END                      ( AST.Let (DECS, EXPS) ) 
+        | LET DECS IN END                           ( AST.Let (DECS, nil) )
+        | COMMENT                                   ( AST.Comment COMMENT )
+
+EXPC    : EXP                                       ( [EXP] )
+        | EXP COMMA EXPS                            ( EXP :: EXPS )
+
+EXPS    : EXP                                       ( [EXP] )
+        | EXP SEMICOLON EXPS                        ( EXP :: EXPS )
+
+LVALUE  : ID                                        ( AST.Id ID )
+        | LVALUE LBRACKETS EXP RBRACKETS            ( AST.Subscript (LVALUE, EXP) )
+        | LVALUE DOT ID                             ( AST.Field (LVALUE, ID) )
+
+RECORDFIELDDEC
+        : ID EQUALS EXP                             ( [(ID, EXP)] )
+        | ID EQUALS EXP COMMA RECORDFIELDDEC        ( (ID, EXP) :: RECORDFIELDDEC )
+
+DECS    : DEC                                       ( [DEC] )
+        | DEC DECS                                  ( DEC :: DECS )
+
+DEC     : TYPEDEC                                   ( AST.TyDec TYPEDEC )
+        | VARDEC                                    ( AST.VDec VARDEC )
+        | FUNDEC                                    ( AST.FDec FUNDEC )
+
+TYPEDEC : TYPE ID EQUALS ID                         ( AST.TypeAssignment (ID1, ID2) )
+        | TYPE ID EQUALS ARRAY OF ID                ( AST.ArrayType (ID1, ID2) )
+        | TYPE ID EQUALS LBRACES                    
+          RECORDFIELDCREATE RBRACES                 ( AST.RecordType (ID, RECORDFIELDCREATE) )
+
+RECORDFIELDCREATE 
+        : ID COLON ID                               ( [(ID1, ID2)] )
+        | ID COLON ID COMMA RECORDFIELDCREATE       ( (ID1, ID2) :: RECORDFIELDCREATE )
+
+FUNDEC  : FUNCTION ID LPAREN RECORDFIELDCREATE      
+          RPAREN EQUALS EXP                         ( AST.Fun (ID, RECORDFIELDCREATE, EXP) )
+        | FUNCTION ID LPAREN RPAREN EQUALS EXP      ( AST.Fun (ID, [], EXP) )
+        | FUNCTION ID LPAREN RECORDFIELDCREATE 
+          RPAREN COLON ID EQUALS EXP                ( AST.FunType (ID1, RECORDFIELDCREATE, ID2, EXP) )
+        | FUNCTION ID LPAREN RPAREN COLON ID        
+          EQUALS EXP                                ( AST.FunType (ID1, [], ID2, EXP) )
+
+VARDEC  : VAR ID ASSIGN EXP                         ( AST.Var (ID, EXP) )
+        | VAR ID COLON ID ASSIGN EXP                ( AST.VarType (ID1, ID2, EXP) )
+
+OPERATOR 
+        : PLUS                                      ( AST.Plus )
+        | MINUS                                     ( AST.Minus )
+        | MULTIPLY                                  ( AST.Multiply )
+        | DIVIDE                                    ( AST.Divide )
+        | GREATER                                   ( AST.Greater )
+        | LESS                                      ( AST.Less )
+        | EQUALS                                    ( AST.Equals )
+        | NOTEQUAL                                  ( AST.NotEqual )
+        | LESSEQUAL                                 ( AST.LessEqual )
+        | GREATEREQUAL                              ( AST.GreaterEqual )
+        | AND                                       ( AST.And )
+        | OR                                        ( AST.Or )

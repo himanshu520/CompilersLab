@@ -48,4 +48,6 @@ val grammar : Grammar = { symbols = !sym, tokens = !tok, rules = !rule };
 
 (* Adding initial state to the map of states *)
 val initialStateLr1 = ref State.empty;
-initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "S", before = [], after = [Atom.atom "E", Atom.atom "$"] });
+initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"], lookahead = Atom.atom "x" });
+initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"], lookahead = Atom.atom "+" });
+initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"], lookahead = Atom.atom "$" });

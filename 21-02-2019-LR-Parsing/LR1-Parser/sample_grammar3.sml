@@ -37,9 +37,8 @@ RuleMap.getProxy (Atom.atom "E", [Atom.atom "V"]);
 val V_ = ref RHSSet.empty;
 V_ := RHSSet.add (!V_, [Atom.atom "*", Atom.atom "E"]);
 V_ := RHSSet.add (!V_, [Atom.atom "x"]);
-RuleMap.getProxy (Atom.atom "V", [Atom.atom "*", Atom.atom "E"]);
 RuleMap.getProxy (Atom.atom "V", [Atom.atom "x"]);
-
+RuleMap.getProxy (Atom.atom "V", [Atom.atom "*", Atom.atom "E"]);
 
 (* Rules corresponding to all the symbols - of type Rules.
    First an empty map is created and then the rules for all the symbols are added successively. *)
@@ -57,4 +56,7 @@ val grammar : Grammar = { symbols = !sym, tokens = !tok, rules = !rule };
 
 (* Adding initial state to the map of states *)
 val initialStateLr1 = ref State.empty;
-initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"] });
+initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"], lookahead = Atom.atom "x" });
+initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"], lookahead = Atom.atom "*" });
+initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"], lookahead = Atom.atom "=" });
+initialStateLr1 := State.add (!initialStateLr1, { lhs = Atom.atom "T", before = [], after = [Atom.atom "S", Atom.atom "$"], lookahead = Atom.atom "$" });

@@ -38,5 +38,32 @@ end;
 
 structure MIPS_module = struct
     type T = Temp.temp;
+    type TTT = T * T * T;
+    type TTI = T * T * IntInf.int;
+    type TT = T * T;
     type L = Temp.label;
+    datatype exp = ADD of TTT
+                 | ADDI of TTI
+                 | ADDU of TTT
+                 | ADDIU of TTI
+                 | SUB of TTT
+                 | SUBU of TTT
+                 | MUL of TTT
+                 | MULT of TT
+                 | DIV of TT
+                 | AND of TTT
+                 | ANDI of TTI
+                 | OR of TTT
+                 | ORI of TTI
+                 | SLL of TTI
+                 | SRL of TTI
+                 | LW of T * IntInf.int * T
+                 | LI of T * IntInf.int
+                 | LA of T * Temp.label
+                 | LUI of T * IntInf.int
+                 | SW of T * IntInf.int * T
+                 | MFHI of T
+                 | MFLO of T
+                 | MOVE of TT
+
 end;

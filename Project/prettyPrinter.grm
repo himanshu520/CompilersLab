@@ -1,10 +1,10 @@
-(* This is the preamble where you can have arbitrary sml code. For us
+(* This is the preamble where we can have arbitrary sml code. For us
 it is empty *)
 
 %%
 
 (* Name of the parser *)
-%name PrettyPrinter
+%name Tiger
 
 (* Produces verbose description of the generated LALR parser *)
 %verbose
@@ -83,14 +83,20 @@ it is empty *)
 %noshift EOF            (* non-shiftable terminals *)
 %arg (fileName) : string
 
+(* Specifying the keywords *)
+%keyword ARRAY BREAK DO ELSE END FOR FUNCTION IF IN LET NIL OF THEN TO TYPE VAR WHILE
+
+(*  *)
+%prefer THEN ELSE LPAREN
 
 (* Specifying the precedence and associativity of operators *)
+%nonassoc FUNCTION VAR TYPE THEN DO OF ASSIGN
+%right ELSE
 %left OR
 %left AND 
 %nonassoc GREATEREQUAL LESSEQUAL EQUALS NOTEQUAL LESS GREATER
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
-%left ASSIGN
 
 %%
 

@@ -63,7 +63,7 @@ fun fill_ll_table_entry x z y = let val prev_ent = LL_TABLE.lookup (!ll_table, (
 fun fill_ll_table_symbol_production y z (x::xs) = if AtomSet.member (#tokens grammar, x) then fill_ll_table_entry y z x
                                                   else if Atom.compare (x, Atom.atom "EPS") = EQUAL then fill_ll_table_symbol_production y z xs
                                                   else (app (fill_ll_table_entry y z) (AtomSet.listItems (!(AtomMap.lookup(!first, x))));
-                                                        fill_ll_table_symbol_production y z xs)
+                                                      if member_atom_list (!nullable) x then fill_ll_table_symbol_production y z xs else ())
 |   fill_ll_table_symbol_production y z _ = app (fill_ll_table_entry y z) (AtomSet.listItems (!(AtomMap.lookup(!follow, y))));
 
 fun fill_ll_table_symbol (z, y) = let fun fill_ll_table_symbol_productions (x::xs) = (fill_ll_table_symbol_production z x x;

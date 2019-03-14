@@ -30,13 +30,13 @@ structure ErrorMsg : ERRORMSG = struct
     exception Error
 
     fun error pos (msg : string) =
-        let fun look (a :: rest, n) = if a < pos then app TextIO.print [":", Int.toString n, ".", Int.toString (pos-a)]
+        let fun look (a :: rest, n) = if a < pos then app TextIO.print [": ", Int.toString n, ".", Int.toString (pos-a)]
                                       else look (rest, n - 1)
-	        |   look _ = print "0.0"
+	        |   look _ = print ": 0.0"
         in ( anyErrors := true;
 	         TextIO.print (!fileName);
 	         look (!linePos, !lineNum);
-	         app TextIO.print [":", msg, "\n"] )
+	         app TextIO.print [": ", msg, "\n"] )
         end
 
     fun impossible msg = ( app print ["Error: Compiler bug: ", msg, "\n"];

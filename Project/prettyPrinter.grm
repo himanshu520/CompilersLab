@@ -52,7 +52,6 @@ it is empty *)
     | COMMA
     | PLUS
     | MINUS
-    | UMINUS
     | EQUALS
     | MULTIPLY
     | DIVIDE 
@@ -126,7 +125,7 @@ it is empty *)
       |  -> IN INTEGER END
 
 (* Specifying the precedence and associativity of operators *)
-%nonassoc FUNCTION VAR TYPE THEN DO OF
+%nonassoc DO OF THEN
 %right ELSE
 %nonassoc ASSIGN
 %left OR
@@ -134,7 +133,6 @@ it is empty *)
 %nonassoc GREATEREQUAL LESSEQUAL EQUALS NOTEQUAL LESS GREATER
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
-%left UMINUS
 
 %%
 

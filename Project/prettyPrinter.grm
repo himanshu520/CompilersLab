@@ -19,7 +19,6 @@ it is empty *)
     | ID of string
     | TYID of string
     | STRING of string
-    | COMMENT of string
     | ARRAY
     | BREAK
     | DO
@@ -109,8 +108,22 @@ it is empty *)
 (* Specifying the keywords *)
 %keyword ARRAY BREAK DO ELSE END FOR FUNCTION IF IN LET NIL OF THEN TO TYPE VAR WHILE
 
-(*  *)
-%prefer THEN ELSE LPAREN
+(* Tokens to insert during error correction *)
+%value ID ( "bogus" )
+%value TYID ( "bogus" )
+%value INTEGER ( 1 )
+%value STRING ( "" )
+
+(* replacement suggestions during error correction *)
+%change EQUALS -> ASSIGN
+      | ASSIGN -> EQUALS
+      | SEMICOLON ELSE -> ELSE
+      | COMMA -> SEMICOLON
+      | SEMICOLON -> COMMA
+      |  -> LPAREN 
+      |  -> ELSE
+      |  -> THEN
+      |  -> IN INTEGER END
 
 (* Specifying the precedence and associativity of operators *)
 %nonassoc FUNCTION VAR TYPE THEN DO OF

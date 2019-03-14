@@ -2,7 +2,7 @@
 
 val lineNum = ErrorMsg.lineNum;
 val linePos = ErrorMsg.linePos;
-val inString = ref true;
+val inString = ref false;
 val commentCnt = ref 0;
 val str = ref "";
 val stringPos = ref 0;

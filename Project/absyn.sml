@@ -1,27 +1,27 @@
-(* The abstract syntax tree for expression *)
-structure AST = struct
+(* This file contains the abstract syntax tree for the Tiger Language *)
+
+structure Absyn = struct
 
     datatype Exp = Nil
                  | Integer of int
                  | String of string
-                 | Comment of string
-                 | Lval of Lvalue
+                 | Lvalue of lValue
                  | Negation of Exp
-                 | Exps of Exp list
+                 | ExpList of Exp list
                  | FunCall of string * (Exp list)
-                 | App of Exp * Operator * Exp
+                 | BinOp of Exp * Operator * Exp
                  | Array of string * Exp * Exp
                  | Record of string * ((string * Exp) list)
-                 | Assignment of Lvalue * Exp
+                 | Assignment of lValue * Exp
                  | IfThenElse of Exp * Exp * Exp
                  | IfThen of Exp * Exp
                  | While of Exp * Exp
                  | For of string * Exp * Exp * Exp
                  | Let of (Dec list) * (Exp list)
 
-    and   Lvalue = Id of string
-                 | Subscript of Lvalue * Exp
-                 | Field of Lvalue * string
+    and   lValue = Id of string
+                 | Subscript of lValue * Exp
+                 | Field of lValue * string
 
     and Operator = Plus | Minus | Divide | Multiply |
                    Equals | NotEqual | Greater | Less |
@@ -42,5 +42,5 @@ structure AST = struct
                  | FunType of string * ((string * string) list) * string * Exp;
 
 
-    type Program = Exp list;
+    type Program = Exp;
 end

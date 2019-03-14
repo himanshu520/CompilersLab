@@ -3,6 +3,7 @@
 structure Absyn = struct
 
     datatype Exp = Nil
+                 | Break
                  | Integer of int
                  | String of string
                  | Lvalue of lValue

@@ -48,6 +48,7 @@ ws = [\t\ ];
 <INITIAL> of                                => ( Tokens.OF (yypos, yypos + 2) );
 <INITIAL> to                                => ( Tokens.TO (yypos, yypos + 2) );
 <INITIAL> type                              => ( Tokens.TYPE (yypos, yypos + 4) );
+<INITIAL> var                               => ( Tokens.VAR (yypos, yypos + 3) );
 <INITIAL> "("                               => ( Tokens.LPAREN (yypos, yypos + 1) );
 <INITIAL> ")"                               => ( Tokens.RPAREN (yypos, yypos + 1) );
 <INITIAL> "{"                               => ( Tokens.LBRACES (yypos, yypos + 1) );

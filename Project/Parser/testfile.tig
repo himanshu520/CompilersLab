@@ -1,0 +1,215 @@
+
+let var x := 10 in 
+
+/*This is a comment*/
+
+/* This is /* a */
+
+nested /* multiline comment */ */
+x := 10; y := x;           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1;
+ t  := (43);
+
+ x :=    -         y;
+
+
+
+
+
+
+
+
+
+    t                  =                    int;
+
+    
+   
+let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in
+           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1 ;
+
+ x :=    -         y ;
+
+
+
+
+
+let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in
+           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1 ;
+
+ x :=    -         y ;
+
+
+
+
+
+
+
+
+
+    t                  =                    int
+
+end;
+
+
+
+    t                  =                    int
+
+
+end;
+
+(((x := 10; y := x   / - z); (t:=234));let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in
+           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1 ;
+
+ x :=    -         y 
+
+
+
+
+
+
+
+
+
+
+end);
+
+t := "This is a string";
+v 
+:= "This is \
+
+       \ multiline string";
+
+let
+function fun (ind  
+:string
+) = let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in
+           x 
+
+:= 10 + 5 * - 4  /       324 
+
+&  1 ;
+
+ x :=    -         y 
+
+
+
+
+
+
+
+
+
+
+end
+in t + 2 end;
+
+
+
+if x   =               3
+        then (if z              
+
+= 5 then
+(t
+
+
+
+ := 6      ;           u   := 43)) else
+  if y = 
+ 5
+ then let
+function fun (ind 
+:string
+) = let       function 
+fun(   x:int,  
+y:string                                  
+)                       =              x +     y /        193
+type        stringtype  =            string type  stringarray           
+= array of string
+type rec = 
+{a:int,           
+b
+:
+string}
+function t() = 
+()
+in end
+in end;
+
+
+
+
+while x <= 4934 do x := x / 43;
+
+
+for x := (x + 4389) to 
+
+
+(4 -
+34) do y := 4 - 1 end

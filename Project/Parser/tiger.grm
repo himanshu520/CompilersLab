@@ -19,7 +19,6 @@ it is empty *)
    The terminals with no datatype have no value associated with them *)
 %term INTEGER of int
     | ID of string
-    | TYID of string
     | STRING of string
     | ARRAY
     | BREAK
@@ -108,7 +107,6 @@ it is empty *)
 
 (* Tokens to insert during error correction *)
 %value ID ( "bogus" )
-%value TYID ( "bogus" )
 %value INTEGER ( 1 )
 %value STRING ( "" )
 
@@ -189,10 +187,10 @@ infixExp    : exp PLUS exp                                              ( (exp, 
             | exp OR exp                                                ( (exp, Absyn.Or, exp) )
 
 
-arrCreate   : TYID LBRACKETS exp RBRACKETS OF exp                       ( (TYID, exp, exp) )
+arrCreate   : ID LBRACKETS exp RBRACKETS OF exp                         ( (ID, exp, exp) )
 
 
-recCreate   : TYID LBRACES fldCreat RBRACES                             ( (TYID, fldCreat) )
+recCreate   : ID LBRACES fldCreat RBRACES                               ( (ID, fldCreat) )
 fldC        : ID EQUALS exp                                             ( (ID, exp) )
 fldCreat    :                                                           ( [] )
             | fldC fldCreatTail                                         ( fldC :: fldCreatTail )
@@ -221,10 +219,10 @@ dec         : tyDec                                                     ( Absyn.
             | funDec                                                    ( Absyn.FDec funDec )
 
 
-tyDec       : TYPE TYID EQUALS TYID                                     ( Absyn.TypeAssignment (TYID, TYID) )
-            | TYPE TYID EQUALS ARRAY OF TYID                            ( Absyn.ArrayType (TYID, TYID) )
-            | TYPE TYID EQUALS LBRACES fldDec RBRACES                   ( Absyn.RecordType (TYID, fldDec) )
-fldD        : ID COLON TYID                                             ( (ID, TYID) )
+tyDec       : TYPE ID EQUALS ID                                         ( Absyn.TypeAssignment (ID, ID) )
+            | TYPE ID EQUALS ARRAY OF ID                                ( Absyn.ArrayType (ID, ID) )
+            | TYPE ID EQUALS LBRACES fldDec RBRACES                     ( Absyn.RecordType (ID, fldDec) )
+fldD        : ID COLON ID                                               ( (ID, ID) )
 fldDec      :                                                           ( [] )
             | fldD fldDecList                                           ( fldD :: fldDecList )
 fldDecList  :                                                           ( [] )
@@ -232,11 +230,11 @@ fldDecList  :                                                           ( [] )
 
 
 funDec      : FUNCTION ID LPAREN fldDec RPAREN EQUALS exp               ( Absyn.Fun (ID, fldDec, exp) )
-            | FUNCTION ID LPAREN fldDec RPAREN COLON TYID EQUALS exp    ( Absyn.FunType (ID, fldDec, TYID, exp) )
+            | FUNCTION ID LPAREN fldDec RPAREN COLON ID EQUALS exp      ( Absyn.FunType (ID, fldDec, ID, exp) )
 
 
 varDec      : VAR ID ASSIGN exp                                         ( Absyn.Var (ID, exp) )
-            | VAR ID COLON TYID ASSIGN exp                              ( Absyn.VarType (ID, TYID, exp) )
+            | VAR ID COLON ID ASSIGN exp                                ( Absyn.VarType (ID, ID, exp) )
 
 
 lValue      : ID                                                        ( Absyn.Id ID )

@@ -1,5 +1,8 @@
+(* CM.make build file *)
+
 Group is
 
+    driver.sml                          (* Driver to run the parser on a given input file *)
     absyn.sml                           (* Contains the AST definition used in tiger.grm *)
     errormsg.sml                        (* Contains ErrorMsg structure used for displaying error messages *)
     tiger.grm:MLYacc                    (* ML-Lex specification for parser of Tiger *)

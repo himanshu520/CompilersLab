@@ -100,7 +100,6 @@ it is empty *)
 %eop EOF                (* the set of terminals that may follow the start symbol *)
 %pure                   (* the semantic actions are free of significant side-effects and always terminate *)
 %noshift EOF            (* non-shiftable terminals *)
-%arg (fileName) : string
 
 (* Specifying the keywords *)
 %keyword ARRAY BREAK DO ELSE END FOR FUNCTION IF IN LET NIL OF THEN TO TYPE VAR WHILE

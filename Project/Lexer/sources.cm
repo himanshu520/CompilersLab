@@ -1,3 +1,5 @@
+(* CM.make build file *)
+
 Group is
 
     driver.sml                          (* Wrapper code to run the lexer on a given file *)

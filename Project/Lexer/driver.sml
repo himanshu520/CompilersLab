@@ -1,3 +1,5 @@
+(* Driver to run the lexer on a given input file *)
+
 structure Parse = struct 
     fun parse filename =
         let val file = TextIO.openIn filename

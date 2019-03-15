@@ -172,21 +172,21 @@ argListTail :                                                           ( [] )
             | COMMA exp argListTail                                     ( exp :: argListTail )
 
 
-infixExp    : exp PLUS exp                                              ( (exp, Absyn.Plus, exp) )
-            | exp MINUS exp                                             ( (exp, Absyn.Minus, exp) )
-            | exp MULTIPLY exp                                          ( (exp, Absyn.Multiply, exp) )
-            | exp DIVIDE exp                                            ( (exp, Absyn.Divide, exp) )
-            | exp GREATER exp                                           ( (exp, Absyn.Greater, exp) )
-            | exp LESS exp                                              ( (exp, Absyn.Less, exp) )
-            | exp EQUALS exp                                            ( (exp, Absyn.Equals, exp) )
-            | exp NOTEQUAL exp                                          ( (exp, Absyn.NotEqual, exp) )
-            | exp LESSEQUAL exp                                         ( (exp, Absyn.LessEqual, exp) )
-            | exp GREATEREQUAL exp                                      ( (exp, Absyn.GreaterEqual, exp) )
-            | exp AND exp                                               ( (exp, Absyn.And, exp) )
-            | exp OR exp                                                ( (exp, Absyn.Or, exp) )
+infixExp    : exp PLUS exp                                              ( (exp1, Absyn.Plus, exp2) )
+            | exp MINUS exp                                             ( (exp1, Absyn.Minus, exp2) )
+            | exp MULTIPLY exp                                          ( (exp1, Absyn.Multiply, exp2) )
+            | exp DIVIDE exp                                            ( (exp1, Absyn.Divide, exp2) )
+            | exp GREATER exp                                           ( (exp1, Absyn.Greater, exp2) )
+            | exp LESS exp                                              ( (exp1, Absyn.Less, exp2) )
+            | exp EQUALS exp                                            ( (exp1, Absyn.Equals, exp2) )
+            | exp NOTEQUAL exp                                          ( (exp1, Absyn.NotEqual, exp2) )
+            | exp LESSEQUAL exp                                         ( (exp1, Absyn.LessEqual, exp2) )
+            | exp GREATEREQUAL exp                                      ( (exp1, Absyn.GreaterEqual, exp2) )
+            | exp AND exp                                               ( (exp1, Absyn.And, exp2) )
+            | exp OR exp                                                ( (exp1, Absyn.Or, exp2) )
 
 
-arrCreate   : ID LBRACKETS exp RBRACKETS OF exp                         ( (ID, exp, exp) )
+arrCreate   : ID LBRACKETS exp RBRACKETS OF exp                         ( (ID, exp1, exp2) )
 
 
 recCreate   : ID LBRACES fldCreat RBRACES                               ( (ID, fldCreat) )
@@ -200,12 +200,12 @@ fldCreatTail:                                                           ( [] )
 assignment  : lValue ASSIGN exp                                         ( (lValue, exp) )
 
 
-ifThenElse  : IF exp THEN exp ELSE exp                                  ( (exp, exp, exp) )
-ifThen      : IF exp THEN exp                                           ( (exp, exp) )
+ifThenElse  : IF exp THEN exp ELSE exp                                  ( (exp1, exp2, exp3) )
+ifThen      : IF exp THEN exp                                           ( (exp1, exp2) )
 
 
-whileExp    : WHILE exp DO exp                                          ( (exp, exp) )
-forExp      : FOR ID ASSIGN exp TO exp DO exp                           ( (ID, exp, exp, exp) )
+whileExp    : WHILE exp DO exp                                          ( (exp1, exp2) )
+forExp      : FOR ID ASSIGN exp TO exp DO exp                           ( (ID, exp1, exp2, exp3) )
 
 
 letExp      : LET decList IN expList END                                ( (decList, expList) )
@@ -218,10 +218,10 @@ dec         : tyDec                                                     ( Absyn.
             | funDec                                                    ( Absyn.FDec funDec )
 
 
-tyDec       : TYPE ID EQUALS ID                                         ( Absyn.TypeAssignment (ID, ID) )
-            | TYPE ID EQUALS ARRAY OF ID                                ( Absyn.ArrayType (ID, ID) )
+tyDec       : TYPE ID EQUALS ID                                         ( Absyn.TypeAssignment (ID1, ID2) )
+            | TYPE ID EQUALS ARRAY OF ID                                ( Absyn.ArrayType (ID1, ID2) )
             | TYPE ID EQUALS LBRACES fldDec RBRACES                     ( Absyn.RecordType (ID, fldDec) )
-fldD        : ID COLON ID                                               ( (ID, ID) )
+fldD        : ID COLON ID                                               ( (ID1, ID2) )
 fldDec      :                                                           ( [] )
             | fldD fldDecList                                           ( fldD :: fldDecList )
 fldDecList  :                                                           ( [] )
@@ -229,11 +229,11 @@ fldDecList  :                                                           ( [] )
 
 
 funDec      : FUNCTION ID LPAREN fldDec RPAREN EQUALS exp               ( Absyn.Fun (ID, fldDec, exp) )
-            | FUNCTION ID LPAREN fldDec RPAREN COLON ID EQUALS exp      ( Absyn.FunType (ID, fldDec, ID, exp) )
+            | FUNCTION ID LPAREN fldDec RPAREN COLON ID EQUALS exp      ( Absyn.FunType (ID1, fldDec, ID2, exp) )
 
 
 varDec      : VAR ID ASSIGN exp                                         ( Absyn.Var (ID, exp) )
-            | VAR ID COLON ID ASSIGN exp                                ( Absyn.VarType (ID, ID, exp) )
+            | VAR ID COLON ID ASSIGN exp                                ( Absyn.VarType (ID1, ID2, exp) )
 
 
 lValue      : ID                                                        ( Absyn.Id ID )

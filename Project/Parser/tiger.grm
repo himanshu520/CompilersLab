@@ -68,9 +68,9 @@ it is empty *)
    meaning of the values associated with the nonterminal *)
 %nonterm argList            of Absyn.Exp list
        | argListTail        of Absyn.Exp list
-       | arrCreate          of Absyn.Exp
-       | assignment         of Absyn.Exp
-       | callExp            of Absyn.Exp
+       | arrCreate          of (string * Absyn.Exp * Absyn.Exp)
+       | assignment         of (Absyn.lValue * Absyn.Exp)
+       | callExp            of (string * Absyn.Exp list)
        | dec                of Absyn.Dec
        | decList            of Absyn.Dec list
        | exp                of Absyn.Exp
@@ -82,20 +82,20 @@ it is empty *)
        | fldD               of (string * string)
        | fldDec             of (string * string) list
        | fldDecList         of (string * string) list
-       | forExp             of Absyn.Exp
+       | forExp             of (string * Absyn.Exp * Absyn.Exp * Absyn.Exp)
        | funDec             of Absyn.FunDec
-       | ifThen             of Absyn.Exp
-       | ifThenElse         of Absyn.Exp
-       | infixExp           of Absyn.Exp
-       | letExp             of Absyn.Exp
-       | lValue             of Absyn.Exp
+       | ifThen             of (Absyn.Exp * Absyn.Exp)
+       | ifThenElse         of (Absyn.Exp * Absyn.Exp * Absyn.Exp)
+       | infixExp           of (Absyn.Exp * Absyn.Operator * Absyn.Exp)
+       | letExp             of (Absyn.Dec list * Absyn.Exp list)
+       | lValue             of Absyn.lValue
        | negation           of Absyn.Exp
        | program            of Absyn.Program
-       | recCreate          of Absyn.Exp
-       | seqExp             of Absyn.Exp
+       | recCreate          of (string * (string * Absyn.Exp) list)
+       | seqExp             of Absyn.Exp list
        | tyDec              of Absyn.TypeDec
        | varDec             of Absyn.VarDec
-       | whileExp           of Absyn.Exp
+       | whileExp           of (Absyn.Exp * Absyn.Exp)
 
 
 %eop EOF                (* the set of terminals that may follow the start symbol *)
@@ -140,21 +140,21 @@ program     : exp                                                       ( exp )
 
 
 exp         : NIL                                                       ( Absyn.Nil )
-            | INTEGER                                                   ( Absyn.int INTEGER )
-            | STRING                                                    ( Absyn.string STRING )
-            | lValue                                                    ( lValue )
-            | negation                                                  ( negation )
-            | seqExp                                                    ( seqExp )
-            | callExp                                                   ( callExp )
-            | infixExp                                                  ( infixExp )
-            | arrCreate                                                 ( arrCreate )
-            | recCreate                                                 ( recCreate )
-            | assignment                                                ( assignment )
-            | ifThenElse                                                ( ifThenElse )
-            | ifThen                                                    ( ifThen )
-            | whileExp                                                  ( whileExp )
-            | forExp                                                    ( forExp )
-            | letExp                                                    ( letExp )
+            | INTEGER                                                   ( Absyn.Integer INTEGER )
+            | STRING                                                    ( Absyn.String STRING )
+            | lValue                                                    ( Absyn.Lvalue lValue )
+            | negation                                                  ( Absyn.Negation negation )
+            | seqExp                                                    ( Absyn.ExpList seqExp )
+            | callExp                                                   ( Absyn.FunCall callExp )
+            | infixExp                                                  ( Absyn.BinOp infixExp )
+            | arrCreate                                                 ( Absyn.Array arrCreate )
+            | recCreate                                                 ( Absyn.Record recCreate )
+            | assignment                                                ( Absyn.Assignment assignment )
+            | ifThenElse                                                ( Absyn.IfThenElse ifThenElse )
+            | ifThen                                                    ( Absyn.IfThen ifThen )
+            | whileExp                                                  ( Absyn.While whileExp )
+            | forExp                                                    ( Absyn.For forExp )
+            | letExp                                                    ( Absyn.Let letExp )
             | BREAK                                                     ( Absyn.Break )
 
 
@@ -165,10 +165,10 @@ expListTail :                                                           ( [] )
             | SEMICOLON exp expListTail                                 ( exp :: expListTail )
 
 
-negation    : MINUS exp                                                 ( Absyn.Negation exp )
+negation    : MINUS exp                                                 ( exp )
 
 
-callExp     : ID LPAREN argList RPAREN                                  ( Absyn.Funcall (ID, argList) )
+callExp     : ID LPAREN argList RPAREN                                  ( (ID, argList) )
 argList     :                                                           ( [] )
             | exp argListTail                                           ( exp :: argListTail )
 argListTail :                                                           ( [] )
@@ -189,10 +189,10 @@ infixExp    : exp PLUS exp                                              ( (exp, 
             | exp OR exp                                                ( (exp, Absyn.Or, exp) )
 
 
-arrCreate   : TYID LBRACKETS exp RBRACKETS OF exp                       ( Absyn.Array (TYID, exp, exp) )
+arrCreate   : TYID LBRACKETS exp RBRACKETS OF exp                       ( (TYID, exp, exp) )
 
 
-recCreate   : TYID LBRACES fldCreat RBRACES                             ( Absyn.Record (TYID, fldCreat) )
+recCreate   : TYID LBRACES fldCreat RBRACES                             ( (TYID, fldCreat) )
 fldC        : ID EQUALS exp                                             ( (ID, exp) )
 fldCreat    :                                                           ( [] )
             | fldC fldCreatTail                                         ( fldC :: fldCreatTail )
@@ -200,18 +200,18 @@ fldCreatTail:                                                           ( [] )
             | COMMA fldC fldCreatTail                                   ( fldC :: fldCreatTail )
 
 
-assignment  : lValue ASSIGN exp                                         ( Absyn.Assignment (lValue, exp) )
+assignment  : lValue ASSIGN exp                                         ( (lValue, exp) )
 
 
-ifThenElse  : IF exp THEN exp ELSE exp                                  ( Absyn.IfThenElse (exp, exp, exp) )
-ifThen      : IF exp THEN exp                                           ( Absyn.IfThen (exp, exp) )
+ifThenElse  : IF exp THEN exp ELSE exp                                  ( (exp, exp, exp) )
+ifThen      : IF exp THEN exp                                           ( (exp, exp) )
 
 
-whileExp    : WHILE exp DO exp                                          ( Absyn.While (exp, exp) )
-forExp      : FOR ID ASSIGN exp TO exp DO exp                           ( Absyn.For (ID, exp, exp, exp) )
+whileExp    : WHILE exp DO exp                                          ( (exp, exp) )
+forExp      : FOR ID ASSIGN exp TO exp DO exp                           ( (ID, exp, exp, exp) )
 
 
-letExp      : LET decList IN expList END                                ( Absyn.Let (decList, expList) )
+letExp      : LET decList IN expList END                                ( (decList, expList) )
 decList     : dec                                                       ( [dec] )
             | dec decList                                               ( dec :: decList )
 
@@ -239,6 +239,6 @@ varDec      : VAR ID ASSIGN exp                                         ( Absyn.
             | VAR ID COLON TYID ASSIGN exp                              ( Absyn.VarType (ID, TYID, exp) )
 
 
-lValue      : ID                                                        ( Absyn.Id )
+lValue      : ID                                                        ( Absyn.Id ID )
             | lValue LBRACKETS exp RBRACKETS                            ( Absyn.Subscript (lValue, exp) )
             | lValue DOT ID                                             ( Absyn.Field (lValue, ID) )

@@ -1,0 +1,9 @@
+Group is
+
+    absyn.sml                           (* Contains the AST definition used in tiger.grm *)
+    errormsg.sml                        (* Contains ErrorMsg structure used for displaying error messages *)
+    tiger.grm:MLYacc                    (* ML-Lex specification for parser of Tiger *)
+    tiger.lex                           (* ML-Lex specification for lexer of Tiger *)
+    $/basis.cm                          (* SML/NJ’s Basis Library *)
+    $/ml-yacc-lib.cm                    (* Code written by Lucent *)
+    $smlnj/compiler/compiler.cm         (* Structure Compiler *)

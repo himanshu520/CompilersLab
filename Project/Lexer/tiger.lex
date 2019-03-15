@@ -71,7 +71,7 @@ ws = [\t\ ];
 <INITIAL> ";"                               => ( Tokens.SEMICOLON (yypos, yypos + 1) );
 <INITIAL> "&"                               => ( Tokens.AND (yypos, yypos + 1) );
 <INITIAL> "|"                               => ( Tokens.OR (yypos, yypos + 1) );
-<INITIAL> {digits}+                         => ( Tokens.INT (valOf (Int.fromString yytext), yypos, yypos + size yytext) );
+<INITIAL> {digits}+                         => ( Tokens.INTEGER (valOf (Int.fromString yytext), yypos, yypos + size yytext) );
 <INITIAL> {alpha}[a-zA-Z0-9_]*              => ( Tokens.ID (yytext, yypos, yypos + size yytext) );
 <INITIAL> \"                                => ( YYBEGIN STRING; inString := true; stringPos := yypos; str := ""; continue () );
 <STRING> \"                                 => ( YYBEGIN INITIAL; inString := false; Tokens.STRING (!str, !stringPos, yypos + 1) );

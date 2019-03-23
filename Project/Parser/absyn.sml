@@ -1,47 +1,38 @@
-(* This file contains the abstract syntax tree for the Tiger Language *)
-
 structure Absyn = struct
 
-    datatype Exp = Nil
-                 | Break
-                 | Integer of int
-                 | String of string
-                 | Lvalue of lValue
-                 | Negation of Exp
-                 | ExpList of Exp list
-                 | FunCall of string * (Exp list)
-                 | BinOp of Exp * Operator * Exp
-                 | Array of string * Exp * Exp
-                 | Record of string * ((string * Exp) list)
-                 | Assignment of lValue * Exp
-                 | IfThenElse of Exp * Exp * Exp
-                 | IfThen of Exp * Exp
-                 | While of Exp * Exp
-                 | For of string * Exp * Exp * Exp
-                 | Let of (Dec list) * (Exp list)
+    type pos = int   and   symbol = Symbol.symbol
 
-    and   lValue = Id of string
-                 | Subscript of lValue * Exp
-                 | Field of lValue * string
+    datatype var = SimpleVar of symbol * pos
+                 | FieldVar of var * symbol * pos
+                 | SubscriptVar of var * exp * pos
 
-    and Operator = Plus | Minus | Divide | Multiply |
-                   Equals | NotEqual | Greater | Less |
-                   GreaterEqual | LessEqual | And | Or
-    
-    and      Dec = TyDec of TypeDec
-                 | VDec of VarDec
-                 | FDec of FunDec
+    and      exp = VarExp of var
+                 | NilExp
+                 | IntExp of int
+                 | StringExp of string * pos
+                 | CallExp of { func : symbol, args : exp list, pos : pos }
+                 | OpExp of { left : exp, oper : oper, right : exp, pos : pos }
+                 | RecordExp of { fields : (symbol * exp * pos) list, typ : symbol, pos : pos }
+                 | SeqExp of (exp * pos) list
+                 | AssignExp of { var : var, exp : exp, pos : pos }
+                 | IfExp of { test : exp, then' : exp, else' : exp option, pos : pos }
+                 | WhileExp of { test : exp, body : exp, pos : pos }
+	             | ForExp of { var : symbol, escape : bool ref, lo : exp, hi : exp, body : exp, pos : pos }
+                 | BreakExp of pos
+                 | LetExp of { decs : dec list, body : exp, pos : pos }
+                 | ArrayExp of { typ : symbol, size: exp, init : exp, pos : pos }
 
-    and  TypeDec = TypeAssignment of string * string
-                 | ArrayType of string * string
-                 | RecordType of string * ((string * string) list)
+    and      dec = FunctionDec of fundec list
+                 | VarDec of { name : symbol, escape : bool ref, typ : (symbol * pos) option, init : exp, pos : pos }
+                 | TypeDec of { name : symbol, ty : ty, pos : pos } list
 
-    and   VarDec = Var of string * Exp
-                 | VarType of string * string * Exp
+    and       ty = NameTy of symbol * pos
+                 | RecordTy of field list
+                 | ArrayTy of symbol * pos
 
-    and   FunDec = Fun of string * ((string * string) list) * Exp
-                 | FunType of string * ((string * string) list) * string * Exp;
+    and     oper = PlusOp | MinusOp | TimesOp | DivideOp | EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
 
+    withtype field = { name : symbol, escape : bool ref, typ : symbol, pos : pos }
+    and     fundec = { name : symbol, params : field list, result : (symbol * pos) option, body : exp, pos : pos }
 
-    type Program = Exp;
 end

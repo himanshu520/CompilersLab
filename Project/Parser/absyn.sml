@@ -1,3 +1,5 @@
+(* This file contains the abstract syntax tree for the Tiger Language *)
+
 structure Absyn = struct
 
     type pos = int   and   symbol = Symbol.symbol

@@ -1,7 +1,16 @@
 (* This file contains the ML-Yacc specifications of parser for the Tiger Language *)
 
-(* This is the preamble where we can have arbitrary sml code. For us
-it is empty *)
+(* This is the preamble where we can have arbitrary sml code *)
+structure A = Absyn
+structure S = Symbol
+
+datatype lValueVar = Field of S.symbol
+                   | Subscript of A.exp
+
+fun makeLvalueVar (v, pos, l::r) = ( case l of Field idsym => makeLvalueVar (A.FieldVar (v, idsym, pos), pos, r)
+                                             | Subscript exp => makeLvalueVar (A.SubscriptVar (v, exp, pos), pos, r) )
+|   makeLvalueVar (v, _, nil) = v
+
 
 %%
 
@@ -61,40 +70,44 @@ it is empty *)
     | AND
     | OR
     | EOF
+    | LOWPREC
     
 (* The nonterminals or symbols of the language.
    The types for the nonterminals are the correspoding abstract syntax used to capture the semantic 
    meaning of the values associated with the nonterminal *)
-%nonterm argList            of Absyn.Exp list
-       | argListTail        of Absyn.Exp list
-       | arrCreate          of (string * Absyn.Exp * Absyn.Exp)
-       | assignment         of (Absyn.lValue * Absyn.Exp)
-       | callExp            of (string * Absyn.Exp list)
-       | dec                of Absyn.Dec
-       | decList            of Absyn.Dec list
-       | exp                of Absyn.Exp
-       | expList            of Absyn.Exp list
-       | expListTail        of Absyn.Exp list
-       | fldC               of string * Absyn.Exp
-       | fldCreat           of (string * Absyn.Exp) list
-       | fldCreatTail       of (string * Absyn.Exp) list
-       | fldD               of (string * string)
-       | fldDec             of (string * string) list
-       | fldDecList         of (string * string) list
-       | forExp             of (string * Absyn.Exp * Absyn.Exp * Absyn.Exp)
-       | funDec             of Absyn.FunDec
-       | ifThen             of (Absyn.Exp * Absyn.Exp)
-       | ifThenElse         of (Absyn.Exp * Absyn.Exp * Absyn.Exp)
-       | infixExp           of (Absyn.Exp * Absyn.Operator * Absyn.Exp)
-       | letExp             of (Absyn.Dec list * Absyn.Exp list)
-       | lValue             of Absyn.lValue
-       | negation           of Absyn.Exp
-       | program            of Absyn.Program
-       | recCreate          of (string * (string * Absyn.Exp) list)
-       | seqExp             of Absyn.Exp list
-       | tyDec              of Absyn.TypeDec
-       | varDec             of Absyn.VarDec
-       | whileExp           of (Absyn.Exp * Absyn.Exp)
+%nonterm argList            of A.exp list
+       | argListTail        of A.exp list
+       | arrCreate          of { typ : S.symbol, size : A.exp, init : A.exp, pos : A.pos }
+       | assignment         of { var : A.var, exp : A.exp, pos : A.pos }
+       | callExp            of { func : S.symbol, args : A.exp list, pos : A.pos }
+       | dec                of A.dec
+       | decList            of A.dec list
+       | exp                of A.exp
+       | expList            of (A.exp * A.pos) list
+       | expListTail        of (A.exp * A.pos) list
+       | fldC               of (S.symbol * A.exp * A.pos)
+       | fldCreat           of (S.symbol * A.exp * A.pos) list
+       | fldCreatTail       of (S.symbol * A.exp * A.pos) list
+       | fldD               of { name : S.symbol, escape : bool ref, typ : S.symbol, pos : A.pos }
+       | fldDec             of A.field list
+       | fldDecList         of A.field list
+       | forExp             of { var : S.symbol, escape : bool ref, lo : A.exp, hi : A.exp, body : A.exp, pos : A.pos }
+       | funDec             of A.fundec
+       | funDecs            of A.fundec list
+       | ifThen             of { test : A.exp, then' : A.exp, else' : A.exp option, pos : A.pos }
+       | ifThenElse         of { test : A.exp, then' : A.exp, else' : A.exp option, pos : A.pos }
+       | infixExp           of { left : A.exp, oper : A.oper, right : A.exp, pos : A.pos }
+       | letExp             of { decs : A.dec list, body : A.exp, pos : A.pos }
+       | lValue             of A.var
+       | lValueTail         of lValueVar list
+       | negation           of { left : A.exp, oper : A.oper, right : A.exp, pos : A.pos }
+       | program            of A.exp
+       | recCreate          of { fields : (S.symbol * A.exp * A.pos) list, typ : S.symbol, pos : A.pos }
+       | seqExp             of (A.exp * A.pos) list
+       | tyDec              of { name : S.symbol, ty : A.ty, pos : A.pos }
+       | tyDecs             of { name : S.symbol, ty : A.ty, pos : A.pos } list
+       | varDec             of { name : A.symbol, escape : bool ref, typ : (S.symbol * A.pos) option, init : A.exp, pos : A.pos }
+       | whileExp           of { test : A.exp, body : A.exp, pos : A.pos }
 
 
 %eop EOF                (* the set of terminals that may follow the start symbol *)
@@ -121,7 +134,8 @@ it is empty *)
       |  -> IN INTEGER END
 
 (* Specifying the precedence and associativity of operators *)
-%nonassoc DO OF THEN
+%nonassoc LOWPREC
+%nonassoc DO OF THEN FUNCTION TYPE
 %right ELSE
 %nonassoc ASSIGN
 %left OR
@@ -136,106 +150,109 @@ it is empty *)
 program     : exp                                                       ( exp )
 
 
-exp         : NIL                                                       ( Absyn.Nil )
-            | INTEGER                                                   ( Absyn.Integer INTEGER )
-            | STRING                                                    ( Absyn.String STRING )
-            | lValue                                                    ( Absyn.Lvalue lValue )
-            | negation                                                  ( Absyn.Negation negation )
-            | seqExp                                                    ( Absyn.ExpList seqExp )
-            | callExp                                                   ( Absyn.FunCall callExp )
-            | infixExp                                                  ( Absyn.BinOp infixExp )
-            | arrCreate                                                 ( Absyn.Array arrCreate )
-            | recCreate                                                 ( Absyn.Record recCreate )
-            | assignment                                                ( Absyn.Assignment assignment )
-            | ifThenElse                                                ( Absyn.IfThenElse ifThenElse )
-            | ifThen                                                    ( Absyn.IfThen ifThen )
-            | whileExp                                                  ( Absyn.While whileExp )
-            | forExp                                                    ( Absyn.For forExp )
-            | letExp                                                    ( Absyn.Let letExp )
-            | BREAK                                                     ( Absyn.Break )
+exp         : NIL                                                       ( A.NilExp )
+            | INTEGER                                                   ( A.IntExp INTEGER )
+            | STRING                                                    ( A.StringExp (STRING, STRINGleft) )
+            | lValue                                                    ( A.VarExp lValue )
+            | negation                                                  ( A.OpExp negation )
+            | seqExp                                                    ( A.SeqExp seqExp )
+            | callExp                                                   ( A.CallExp callExp )
+            | infixExp                                                  ( A.OpExp infixExp )
+            | arrCreate                                                 ( A.ArrayExp arrCreate )
+            | recCreate                                                 ( A.RecordExp recCreate )
+            | assignment                                                ( A.AssignExp assignment )
+            | ifThenElse                                                ( A.IfExp ifThenElse )
+            | ifThen                                                    ( A.IfExp ifThen )
+            | whileExp                                                  ( A.WhileExp whileExp )
+            | forExp                                                    ( A.ForExp forExp )
+            | letExp                                                    ( A.LetExp letExp )
+            | BREAK                                                     ( A.BreakExp BREAKleft)
 
 
 seqExp      : LPAREN expList RPAREN                                     ( expList )
 expList     :                                                           ( [] )
-            | exp expListTail                                           ( exp :: expListTail )
+            | exp expListTail                                           ( (exp, expleft) :: expListTail )
 expListTail :                                                           ( [] )
-            | SEMICOLON exp expListTail                                 ( exp :: expListTail )
+            | SEMICOLON exp expListTail                                 ( (exp, expleft) :: expListTail )
 
 
-negation    : MINUS exp                                                 ( exp )
+negation    : MINUS exp                                                 ( { left = A.IntExp 0, oper = A.MinusOp, right = exp, pos = MINUSleft} )
 
 
-callExp     : ID LPAREN argList RPAREN                                  ( (ID, argList) )
+callExp     : ID LPAREN argList RPAREN                                  ( { func = Symbol.symbol ID, args = argList, pos = IDleft } )
 argList     :                                                           ( [] )
             | exp argListTail                                           ( exp :: argListTail )
 argListTail :                                                           ( [] )
             | COMMA exp argListTail                                     ( exp :: argListTail )
 
 
-infixExp    : exp PLUS exp                                              ( (exp1, Absyn.Plus, exp2) )
-            | exp MINUS exp                                             ( (exp1, Absyn.Minus, exp2) )
-            | exp MULTIPLY exp                                          ( (exp1, Absyn.Multiply, exp2) )
-            | exp DIVIDE exp                                            ( (exp1, Absyn.Divide, exp2) )
-            | exp GREATER exp                                           ( (exp1, Absyn.Greater, exp2) )
-            | exp LESS exp                                              ( (exp1, Absyn.Less, exp2) )
-            | exp EQUALS exp                                            ( (exp1, Absyn.Equals, exp2) )
-            | exp NOTEQUAL exp                                          ( (exp1, Absyn.NotEqual, exp2) )
-            | exp LESSEQUAL exp                                         ( (exp1, Absyn.LessEqual, exp2) )
-            | exp GREATEREQUAL exp                                      ( (exp1, Absyn.GreaterEqual, exp2) )
-            | exp AND exp                                               ( (exp1, Absyn.And, exp2) )
-            | exp OR exp                                                ( (exp1, Absyn.Or, exp2) )
+infixExp    : exp PLUS exp                                              ( { left = exp1, oper = A.PlusOp, right = exp2, pos = PLUSleft } )
+            | exp MINUS exp                                             ( { left = exp1, oper = A.MinusOp, right = exp2, pos = MINUSleft } )
+            | exp MULTIPLY exp                                          ( { left = exp1, oper = A.DivideOp, right = exp2, pos = MULTIPLYleft } )
+            | exp DIVIDE exp                                            ( { left = exp1, oper = A.TimesOp, right = exp2, pos = DIVIDEleft } )
+            | exp GREATER exp                                           ( { left = exp1, oper = A.GtOp, right = exp2, pos = GREATERleft } )
+            | exp LESS exp                                              ( { left = exp1, oper = A.LtOp, right = exp2, pos = LESSleft } )
+            | exp EQUALS exp                                            ( { left = exp1, oper = A.EqOp, right = exp2, pos = EQUALSleft } )
+            | exp NOTEQUAL exp                                          ( { left = exp1, oper = A.NeqOp, right = exp2, pos = NOTEQUALleft } )
+            | exp LESSEQUAL exp                                         ( { left = exp1, oper = A.LeOp, right = exp2, pos = LESSEQUALleft } )
+            | exp GREATEREQUAL exp                                      ( { left = exp1, oper = A.GeOp, right = exp2, pos = GREATEREQUALleft } )
 
 
-arrCreate   : ID LBRACKETS exp RBRACKETS OF exp                         ( (ID, exp1, exp2) )
+arrCreate   : ID LBRACKETS exp RBRACKETS OF exp                         ( { typ = S.symbol ID, size = exp1, init = exp2, pos = IDleft } )
 
 
-recCreate   : ID LBRACES fldCreat RBRACES                               ( (ID, fldCreat) )
-fldC        : ID EQUALS exp                                             ( (ID, exp) )
+recCreate   : ID LBRACES fldCreat RBRACES                               ( { fields = fldCreat, typ = S.symbol ID, pos = IDleft } )
+fldC        : ID EQUALS exp                                             ( (S.symbol ID, exp, IDleft) )
 fldCreat    :                                                           ( [] )
             | fldC fldCreatTail                                         ( fldC :: fldCreatTail )
 fldCreatTail:                                                           ( [] )
             | COMMA fldC fldCreatTail                                   ( fldC :: fldCreatTail )
 
 
-assignment  : lValue ASSIGN exp                                         ( (lValue, exp) )
+assignment  : lValue ASSIGN exp                                         ( { var = lValue, exp = exp, pos = ASSIGNleft } )
 
 
-ifThenElse  : IF exp THEN exp ELSE exp                                  ( (exp1, exp2, exp3) )
-ifThen      : IF exp THEN exp                                           ( (exp1, exp2) )
+ifThenElse  : IF exp THEN exp ELSE exp                                  ( { test = exp1, then' = exp2, else' = SOME exp3, pos = IFleft } )
+            | exp AND exp                                               ( { test = exp1, then' = exp2, else' = SOME (A.IntExp 0), pos = ANDleft } )
+            | exp OR exp                                                ( { test = exp1, then' = A.IntExp 1, else' = SOME exp2, pos = ORleft } )
+ifThen      : IF exp THEN exp                                           ( { test = exp1, then' = exp2, else' = NONE, pos = IFleft } )
 
 
-whileExp    : WHILE exp DO exp                                          ( (exp1, exp2) )
-forExp      : FOR ID ASSIGN exp TO exp DO exp                           ( (ID, exp1, exp2, exp3) )
+whileExp    : WHILE exp DO exp                                          ( { test = exp1, body = exp2, pos = WHILEleft } )
+forExp      : FOR ID ASSIGN exp TO exp DO exp                           ( { var = S.symbol ID, escape = ref true, lo = exp1, hi = exp2, body = exp3, pos = FORleft } )
 
 
-letExp      : LET decList IN expList END                                ( (decList, expList) )
+letExp      : LET decList IN expList END                                ( { decs = decList, body = A.SeqExp expList, pos = LETleft } )
 decList     : dec                                                       ( [dec] )
             | dec decList                                               ( dec :: decList )
 
 
-dec         : tyDec                                                     ( Absyn.TyDec tyDec )
-            | varDec                                                    ( Absyn.VDec varDec )
-            | funDec                                                    ( Absyn.FDec funDec )
+dec         : tyDecs %prec LOWPREC                                      ( A.TypeDec tyDecs )
+            | varDec                                                    ( A.VarDec varDec )
+            | funDecs %prec LOWPREC                                     ( A.FunctionDec funDecs )
 
-
-tyDec       : TYPE ID EQUALS ID                                         ( Absyn.TypeAssignment (ID1, ID2) )
-            | TYPE ID EQUALS ARRAY OF ID                                ( Absyn.ArrayType (ID1, ID2) )
-            | TYPE ID EQUALS LBRACES fldDec RBRACES                     ( Absyn.RecordType (ID, fldDec) )
-fldD        : ID COLON ID                                               ( (ID1, ID2) )
+tyDecs      : tyDec                                                     ( [tyDec] )
+            | tyDecs tyDec                                              ( tyDecs @ [tyDec] )
+tyDec       : TYPE ID EQUALS ID                                         ( { name = S.symbol ID1, ty = A.NameTy (S.symbol ID2, ID2left), pos = TYPEleft } )
+            | TYPE ID EQUALS ARRAY OF ID                                ( { name = S.symbol ID1, ty = A.ArrayTy (S.symbol ID2, ID2left), pos = TYPEleft } )
+            | TYPE ID EQUALS LBRACES fldDec RBRACES                     ( { name = S.symbol ID, ty = A.RecordTy fldDec, pos = TYPEleft } )
+fldD        : ID COLON ID                                               ( { name = S.symbol ID1, escape = ref true, typ = S.symbol ID2, pos = ID1left } )
 fldDec      :                                                           ( [] )
             | fldD fldDecList                                           ( fldD :: fldDecList )
 fldDecList  :                                                           ( [] )
             | COMMA fldD fldDecList                                     ( fldD :: fldDecList )
 
-
-funDec      : FUNCTION ID LPAREN fldDec RPAREN EQUALS exp               ( Absyn.Fun (ID, fldDec, exp) )
-            | FUNCTION ID LPAREN fldDec RPAREN COLON ID EQUALS exp      ( Absyn.FunType (ID1, fldDec, ID2, exp) )
-
-
-varDec      : VAR ID ASSIGN exp                                         ( Absyn.Var (ID, exp) )
-            | VAR ID COLON ID ASSIGN exp                                ( Absyn.VarType (ID1, ID2, exp) )
+funDecs     : funDec                                                    ( [funDec] )
+            | funDecs funDec                                            ( funDecs @ [funDec] )
+funDec      : FUNCTION ID LPAREN fldDec RPAREN EQUALS exp               ( { name = S.symbol ID, params = fldDec, result = NONE, body = exp, pos = FUNCTIONleft } )
+            | FUNCTION ID LPAREN fldDec RPAREN COLON ID EQUALS exp      ( { name = S.symbol ID1, params = fldDec, result = SOME (S.symbol ID2, ID2left), body = exp, pos = FUNCTIONleft } )
 
 
-lValue      : ID                                                        ( Absyn.Id ID )
-            | lValue LBRACKETS exp RBRACKETS                            ( Absyn.Subscript (lValue, exp) )
-            | lValue DOT ID                                             ( Absyn.Field (lValue, ID) )
+varDec      : VAR ID ASSIGN exp                                         ( { name = S.symbol ID, escape = ref true, typ = NONE, init = exp, pos = VARleft } )
+            | VAR ID COLON ID ASSIGN exp                                ( { name = S.symbol ID1, escape = ref true, typ = SOME (S.symbol ID2, ID2left), init = exp, pos = VARleft } )
+
+
+lValue      : ID lValueTail                                             ( makeLvalueVar (A.SimpleVar (S.symbol ID, IDleft), IDleft, lValueTail) )
+lValueTail  :                                                           ( [] )
+            | LBRACKETS exp RBRACKETS lValueTail                        ( (Subscript exp) :: lValueTail )
+            | DOT ID lValueTail                                         ( Field (S.symbol ID) :: lValueTail )

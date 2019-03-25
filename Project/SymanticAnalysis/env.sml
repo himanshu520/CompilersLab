@@ -9,7 +9,7 @@ signature ENV = sig
     val base_venv : enventry Symbol.table
 end
 
-structure Env :> ENV = struct 
+structure Env : ENV = struct 
     structure S = Symbol
     structure T = Types
     type access = unit

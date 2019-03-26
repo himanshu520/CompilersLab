@@ -1,11 +1,5 @@
 signature SEMANT = sig
-    type venv
-    type tenv
-    type expty
-    val transVar : venv * tenv * Absyn.var -> expty
-    val transExp : venv * tenv * Absyn.exp -> expty
-    val transDec : venv * tenv * Absyn.dec -> { venv : venv, tenv : tenv }
-    val transTy : tenv * Absyn.ty -> Types.ty
+    val transProg : Absyn.exp -> unit
 end
 
 structure Semant = struct 
@@ -120,10 +114,39 @@ structure Semant = struct
         in (trexp) end
 
 
-    and transDec (venv, tenv, A.FunctionDec lst) = { venv = venv, tenv = tenv }
+    and transDec (venv, tenv, A.FunctionDec lst) = let fun addFunName ({ name, params, result, body, pos }, env) = let val retty = ( case result of SOME (sym, pos) => ( case S.look (tenv, sym) of SOME t => t
+                                                                                                                                                                                                  | _ => ( error pos ("invalid return type '" ^ S.name sym ^ "' for function '" ^ S.name name ^ "'"); T.UNIT ) )
+                                                                                                                                                  | _ => T.UNIT )
+                                                                                                                       fun fieldTy { name, escape, typ, pos } = case S.look (tenv, typ) of SOME t => t
+                                                                                                                                                                                         | _ => ( error pos ("invalid type '" ^ S.name typ ^ "' for function argument '" ^ S.name name ^ "'"); T.UNIT)
+                                                                                                                       val paramTy = map fieldTy params
+                                                                                                                   in S.enter (env, name, E.FunEntry { formals = paramTy, result = retty }) end
+                                                       val venv' = foldl addFunName venv lst
+                                                       fun completeFunName ({ name, params, result, body, pos }, env) = let val retty = ( case result of SOME (sym, pos) => ( case S.look (tenv, sym) of SOME t => t
+                                                                                                                                                                                                       | _ => ( error pos ("invalid return type '" ^ S.name sym ^ "' for function '" ^ S.name name ^ "'"); T.UNIT ) )
+                                                                                                                                                       | _ => T.UNIT )
+                                                                                                                            fun enterParam ({ name, escape, typ, pos }, env) = let val ty = ( case S.look (tenv, typ) of SOME t => t
+                                                                                                                                                                                                                       | _ => ( error pos ("invalid return type '" ^ S.name typ ^ "' for function '" ^ S.name name ^ "'"); T.UNIT ) )
+                                                                                                                                                                               in S.enter (env, name, E.VarEntry { ty = ty }) end
+                                                                                                                            val venv'' = foldl enterParam venv' params
+                                                                                                                            val { exp = _, ty = funTy } = transExp (venv'', tenv) body
+                                                                                                                            fun fieldTy { name, escape, typ, pos } = case S.look (tenv, typ) of SOME t => t
+                                                                                                                                                                                         | _ => ( error pos ("invalid type '" ^ S.name typ ^ "' for function argument '" ^ S.name name ^ "'"); T.UNIT)
+                                                                                                                            val paramTy = map fieldTy params
+                                                                                                                        in ( if (SOME funTy) = S.look (tenv, name) then () else error pos ("function value and return type does not match for '" ^ S.name name ^ "'");
+                                                                                                                             S.enter (env, name, E.FunEntry { formals = paramTy, result = funTy }) )
+                                                                                                                        end
+                                                        val venv'' = foldl completeFunName venv lst
+                                                        fun checkFunRep ((x::xs) : A.fundec list, lst) = if List.find (fn t => (#name x) = t) lst <> NONE then checkFunRep (xs, (#name x) :: lst) else (true, #pos x)
+                                                        |   checkFunRep (_, _) = (false, 0)
+                                                        val checkFunRepVal = checkFunRep (lst, [])
+                                                   in if (#1 checkFunRepVal) then ( error (#2 checkFunRepVal) "function cannot have repeated names"; { venv = venv, tenv = tenv} )
+                                                        else { venv = venv'', tenv = tenv } 
+                                                   end
     |   transDec (venv, tenv, A.VarDec { name, escape, typ, init, pos }) = ( case typ of SOME (sym, pos) => let val typty = S.look (tenv, sym)
                                                                                                                 val initty = #ty (transExp (venv, tenv) init)
-                                                                                                            in ( case typty of SOME t => if (actual_ty t) <> initty then error pos ("type '" ^ S.name sym ^ "' not matches the initialisation expression for variable '" ^ S.name name ^ "'") else ()
+                                                                                                            in ( case typty of SOME t => if (actual_ty t) = initty then ()
+                                                                                                                                         else error pos ("type '" ^ S.name sym ^ "' not matches the initialisation expression for variable '" ^ S.name name ^ "'")
                                                                                                                              | _ => error pos ("type '" ^ S.name sym ^ "' is not defined");
                                                                                                                  { tenv = tenv, venv = S.enter (venv, name, E.VarEntry { ty = initty }) } )
                                                                                                             end
@@ -134,9 +157,9 @@ structure Semant = struct
                                                    fun completeTypeName ({ name, ty, pos }, env) = S.enter (env, name, transTy (tenv', ty))
                                                    val tenv'' = foldl completeTypeName tenv lst
                                                    fun validateTy ({ name, ty, pos }, cnt) = ( case S.look (tenv'', name) of NONE => ( error pos ("type '" ^ S.name name ^ "' not valid"); false )
-                                                                                                                           | SOME (T.NAME (nm, tyref)) => if nm = name andalso cnt = 0 then false else true
-                                                                                                                                                          (* else ( case !tyref of SOME t => validateTy ({ name, t, pos }, 0)
-                                                                                                                                                                                   | _ => false ) *)
+                                                                                                                           | SOME (T.NAME (nm, tyref)) => if nm = name andalso cnt = 0 then false
+                                                                                                                                                          else ( case !tyref of SOME t => validateTy ({ name = nm, ty = ty, pos = pos }, 0)
+                                                                                                                                                                                   | _ => false )
                                                                                                                            | _ => true )
                                                    fun checkCyclicTyDec (x :: xs) = if validateTy (x, 1) then checkCyclicTyDec xs else (true, #pos x)
                                                    |   checkCyclicTyDec _ = (false, 0)
@@ -153,4 +176,6 @@ structure Semant = struct
     |   transTy (tenv, A.ArrayTy (sym, pos)) = ( case S.look (tenv, sym) of SOME t => T.ARRAY (t, ref ())
                                                                           | _ => ( error pos ("type '" ^ S.name sym ^ "' not defined"); T.ARRAY (T.UNIT, ref ()) ) )
 
+
+    fun transProg exp = transExp (E.base_venv, E.base_tenv) exp
 end

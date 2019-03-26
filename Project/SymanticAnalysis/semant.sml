@@ -29,7 +29,7 @@ structure Semant = struct
                                       exp )
 
     fun actual_ty (T.NAME (sym, ty)) = ( case (!ty) of SOME t => actual_ty t
-                                                     | NONE => raise ErrMsg)
+                                                     | NONE => raise ErrMsg )
     |   actual_ty ty = ty
 
     fun transExp (venv, tenv) = 
@@ -39,12 +39,12 @@ structure Semant = struct
             |   trexp (A.StringExp (u, v)) = { exp = (), ty = T.STRING }
             |   trexp (A.CallExp { func, args, pos }) = ( case S.look (venv, func) of
                                                               SOME (E.FunEntry { formals , result }) => let val args' = map (fn t => #ty (trexp t)) args
-                                                                                                            fun checkArgs (x::xs, y::ys) = if x = y then checkArgs (xs, ys)
-                                                                                                                                         else (error pos "passed arguments do not match those in function defintion"; false)
+                                                                                                            fun checkArgs ((x::xs) : T.ty list, (y::ys) : T.ty list) = if x = y then checkArgs (xs, ys)
+                                                                                                                                                                       else (error pos "passed arguments do not match those in function defintion"; false)
                                                                                                             |   checkArgs (nil, nil) = true
                                                                                                             |   checkArgs _ = (error pos "passed arguments do not match those in function definition"; false)
                                                                                                         in checkArgs (args', formals); { exp = (), ty = actual_ty result } end
-                                                            | NONE => (error pos ("function '" ^ S.name func ^ "' not defined"); { exp = (), ty = T.UNIT } ) )
+                                                            | _ => (error pos ("function '" ^ S.name func ^ "' not defined"); { exp = (), ty = T.UNIT } ) )
             |   trexp (A.OpExp { left, oper, right, pos }) = if foldl (fn (t, u) => u orelse (t = oper)) false [A.PlusOp, A.MinusOp, A.TimesOp, A.DivideOp] then ( checkInt (trexp left, pos);
                                                                                                                                                                      checkInt (trexp right, pos);
                                                                                                                                                                      { exp = (), ty = T.INT } )
@@ -90,7 +90,8 @@ structure Semant = struct
                                                                        end
             |   trexp (A.BreakExp pos) = ( if (!nestOrd) > 0 then () else error pos "'break' is not inside a 'for' or 'while' loop";
                                            { exp = (), ty = T.UNIT } )
-            |   trexp (A.LetExp { decs, body, pos }) = let val { venv = venv', tenv = tenv' } = transDec (venv, tenv, decs)
+            |   trexp (A.LetExp { decs, body, pos }) = let fun trdec (dec, { venv, tenv }) = transDec (venv, tenv, dec)
+                                                           val { venv = venv', tenv = tenv' } = foldr trdec { venv = venv, tenv = tenv } decs
                                                        in transExp (venv', tenv') body end
             |   trexp (A.ArrayExp { typ, size, init, pos }) = ( checkInt (trexp size, pos);
                                                                 case S.look (tenv, typ) of SOME (T.ARRAY (t, _)) => let val { exp = _, ty = initty } = trexp init
@@ -100,7 +101,7 @@ structure Semant = struct
                                                                                                                     end
                                                                                          | _ => ( error pos ("'" ^ S.name typ ^ "' is not an array type"); { exp = (), ty = T.UNIT } ) )
             and trvar (A.SimpleVar (sym, pos)) = ( case S.look (venv, sym) of SOME (E.VarEntry { ty }) => { exp = (), ty = actual_ty ty }
-                                                                            | NONE => (error pos ("undefined variable '" ^ S.name sym ^ "'"); { exp = (), ty = Types.UNIT } ) )
+                                                                            | _ => (error pos ("undefined variable '" ^ S.name sym ^ "'"); { exp = (), ty = Types.UNIT } ) )
             |   trvar (A.FieldVar (var, sym, pos)) = let val { exp = _, ty = varty } = trvar var
                                                          val symty = ref T.INT
                                                          fun findSymTy ((x, y) :: xs) = if x = sym then (symty := y; true)
@@ -110,15 +111,46 @@ structure Semant = struct
                                                                                                   else ( error pos ("'" ^ S.name sym ^ "' is not a valid field"); { exp = (), ty = T.UNIT } )
                                                                       | _ => ( error pos ("invalid record variable"); { exp = (), ty = T.UNIT } ) )
                                                      end
-            |   trvar (A.SubscriptVar (var, exp, pos)) = ( checkInt (trexp exp, pos);  
+            |   trvar (A.SubscriptVar (var, exp, pos)) = ( checkInt (trexp exp, pos);
                                                            let val { exp = _, ty = varty } = trvar var
                                                            in ( case varty of T.ARRAY (arrty, _) => { exp = (), ty = actual_ty arrty }
-                                                                          | _ => ( error pos "invalid array variable"; { exp = (), ty = T.UNIT } ) ) 
+                                                                            | _ => ( error pos "invalid array variable"; { exp = (), ty = T.UNIT } ) )
                                                            end )
 
-        in trexp end
+        in (trexp) end
 
 
-    (* and fun TransDec (venv, tenv, dec) = { venv = venv, tenv = tenv } *)
+    and transDec (venv, tenv, A.FunctionDec lst) = { venv = venv, tenv = tenv }
+    |   transDec (venv, tenv, A.VarDec { name, escape, typ, init, pos }) = ( case typ of SOME (sym, pos) => let val typty = S.look (tenv, sym)
+                                                                                                                val initty = #ty (transExp (venv, tenv) init)
+                                                                                                            in ( case typty of SOME t => if (actual_ty t) <> initty then error pos ("type '" ^ S.name sym ^ "' not matches the initialisation expression for variable '" ^ S.name name ^ "'") else ()
+                                                                                                                             | _ => error pos ("type '" ^ S.name sym ^ "' is not defined");
+                                                                                                                 { tenv = tenv, venv = S.enter (venv, name, E.VarEntry { ty = initty }) } )
+                                                                                                            end
+                                                                                       | _ => let val initty = #ty (transExp (venv, tenv) init)
+                                                                                              in { tenv = tenv, venv = S.enter (venv, name, E.VarEntry { ty = initty }) } end )
+    |   transDec (venv, tenv, A.TypeDec lst) = let fun addTypeName ({ name, ty, pos }, env) = S.enter (env, name, T.NAME (name, ref NONE))
+                                                   val tenv' = foldl addTypeName tenv lst
+                                                   fun completeTypeName ({ name, ty, pos }, env) = S.enter (env, name, transTy (tenv', ty))
+                                                   val tenv'' = foldl completeTypeName tenv lst
+                                                   fun validateTy ({ name, ty, pos }, cnt) = ( case S.look (tenv'', name) of NONE => ( error pos ("type '" ^ S.name name ^ "' not valid"); false )
+                                                                                                                           | SOME (T.NAME (nm, tyref)) => if nm = name andalso cnt = 0 then false else true
+                                                                                                                                                          (* else ( case !tyref of SOME t => validateTy ({ name, t, pos }, 0)
+                                                                                                                                                                                   | _ => false ) *)
+                                                                                                                           | _ => true )
+                                                   fun checkCyclicTyDec (x :: xs) = if validateTy (x, 1) then checkCyclicTyDec xs else (true, #pos x)
+                                                   |   checkCyclicTyDec _ = (false, 0)
+                                                   val cycle = checkCyclicTyDec lst
+                                               in if #1 cycle then ( error (#2 cycle) "recursive type declaration not valid"; { venv = venv, tenv = tenv } )
+                                                  else { venv = venv, tenv = tenv'' }
+                                               end
+
+    and transTy (tenv, A.NameTy (sym, pos)) = ( case S.look (tenv, sym) of SOME t => t
+                                                                         | _ => ( error pos ("type '" ^ S.name sym ^ "' not defined"); T.UNIT ) )
+    |   transTy (tenv, A.RecordTy lst) = let fun fieldTy { name, escape, typ, pos } = ( case S.look (tenv, name) of SOME t => (name, t)
+                                                                                                                  | _ => ( error pos ("type '" ^ S.name typ ^ "' not defined"); (name, T.UNIT) ) )
+                                         in T.RECORD (map fieldTy lst, ref ()) end
+    |   transTy (tenv, A.ArrayTy (sym, pos)) = ( case S.look (tenv, sym) of SOME t => T.ARRAY (t, ref ())
+                                                                          | _ => ( error pos ("type '" ^ S.name sym ^ "' not defined"); T.ARRAY (T.UNIT, ref ()) ) )
 
 end

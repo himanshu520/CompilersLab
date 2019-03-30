@@ -1,4 +1,0 @@
-let type a = int
-    type b = a
-
-in 20 end

@@ -1,0 +1,20 @@
+(* CM.make build file *)
+
+Group is
+
+    driver.sml                          (* Driver to run the parser on a given input file *)
+    absyn.sml                           (* Contains the AST definition used in tiger.grm *)
+    env.sml                             (* Defines the type to implement the symbol table for the Tiger and also defines the base symbol tables for types and functions *)
+    errormsg.sml                        (* Contains ErrorMsg structure used for displaying error messages *)
+    prabsyn.sml                         (* Contains function to print the AST in a readable format *)
+    semant.sml                          (* Contains the symantic analyser for the Tiger language *)
+    symbol.sml                          (* Contains structure to convert strings into symbols and also implements the symbol table for the compiler *)
+    table.sml                           (* Contains functor to create a lookup table corresponding to a key type *)
+    tiger.grm:MLYacc                    (* ML-Lex specification for parser of Tiger *)
+    tiger.lex                           (* ML-Lex specification for lexer of Tiger *)
+    translate.sml                       (* Contains the code to translate tiger code into intermediate reprsentation language *)
+    types.sml                           (* Contains the datatype to capture the types in Tiger language *)
+    $/basis.cm                          (* SML/NJ’s Basis Library *)
+    $/ml-yacc-lib.cm                    (* Code written by Lucent *)
+    $smlnj/compiler/compiler.cm         (* Structure Compiler *)
+    $/smlnj-lib.cm                      (* SML/NJ's Library *)

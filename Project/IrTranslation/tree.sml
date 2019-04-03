@@ -18,9 +18,20 @@ structure Tree = struct
                  | SEQ of stm * stm
                  | LABEL of Temp.label
 
-       and binop = PLUS | MINUS | MUL | DIV 
+       and binop = PLUS | MINUS | MUL | DIV
                  | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
 
-       and relop = EQ | NE | LT | GT | LE | GE 
+       and relop = EQ | NE | LT | GT | LE | GE
                  | ULT | ULE | UGT | UGE
+
+    fun notRel oper = ( case oper of EQ => NE
+                                   | NE => EQ
+                                   | LT => GE
+                                   | GT => LE
+                                   | LE => GT
+                                   | GE => LT
+                                   | ULT => UGE
+                                   | UGT => ULE
+                                   | ULE => UGT
+                                   | UGE => ULT )
 end

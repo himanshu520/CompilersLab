@@ -3,10 +3,12 @@
 structure MipsFrame : FRAME = struct
     structure Te = Temp
     structure Tr = Tree
+    structure A = Assem
 
     datatype access = InFrame of int | InReg of Te.temp
     type frame = { name : Te.label, formals : access list, locals : int ref, shift : Tr.stm list }
     datatype frag = PROC of { body : Tr.stm, frame : frame } | STRING of Te.label * string
+    type register = string
     exception ArgumentOverflow
 
     val wordSize = 4
@@ -33,7 +35,7 @@ structure MipsFrame : FRAME = struct
     val T7 = Te.newtemp ()
     val T8 = Te.newtemp ()
     val T9 = Te.newtemp ()
-    val callerSave = [T0, T1, T2, T3, T4, T5, T6, T7, T8, T9];
+    val callerSaves = [T0, T1, T2, T3, T4, T5, T6, T7, T8, T9];
 
     (* callee save registers *)
     val S0 = Te.newtemp ()
@@ -44,7 +46,7 @@ structure MipsFrame : FRAME = struct
     val S5 = Te.newtemp ()
     val S6 = Te.newtemp ()
     val S7 = Te.newtemp ()
-    val calleeSave = [S0, S1, S2, S3, S4, S5, S6, S7];
+    val calleeSaves = [S0, S1, S2, S3, S4, S5, S6, S7];
 
     (* Other special registers *)
     val ZERO = Te.newtemp ()
@@ -52,6 +54,15 @@ structure MipsFrame : FRAME = struct
     val FP = Te.newtemp ()
     val RA = Te.newtemp ()
     val RV = V0
+    val specialRegs = [ ZERO, SP, FP, RA, RV ];
+
+    val regList = [ (SP, "$sp"), (FP, "$fp"), (RA, "$ra"), (RV, "$v0"), 
+                    (S0, "$s0"), (S1, "$s1"), (S2, "$s2"), (S3, "$s3"), (S4, "$s4"), (S5, "$s5"), (S6, "$s6"), (S7, "$s7"),
+                    (T0, "$t0"), (T1, "$t1"), (T2, "$t2"), (T3, "$t3"), (T4, "$t4"), (T5, "$t5"), (T6, "$t6"), (T7, "$t7"), (T8, "$t8"), (T9, "$t9"),
+                    (A0, "$a0"), (A1, "$a1"), (A2, "$a2"), (A3, "$a3") ];
+    val tempMap = foldl (fn ((x, y), tbl) => Te.Table.enter (tbl, x, y)) Te.Table.empty regList
+    fun tempString t = ( case Te.Table.look (tempMap, t) of SOME t => t
+                                                          | _ => Temp.makestring t )
 
     (* used by Translate to turn Frame.access to Tree.exp, the second argument is the address of the stack frame where the access (first argument) lives in *)
     fun exp (InFrame t) = (fn tmp => Tr.MEM (Tr.BINOP (Tr.PLUS, tmp, Tr.CONST t)))
@@ -72,7 +83,11 @@ structure MipsFrame : FRAME = struct
     fun allocLocal { name, formals, locals, shift } escape = if escape then ( locals := !locals + 1; InFrame (!locals * wordSize) )
                                                              else InReg (Te.newtemp ())
 
-    fun procEntryExit1 (frame, body) = body
     fun string (label, str) = Symbol.name label ^ ": .asciiz \"" ^ str ^ "\"\n"
     fun externalCall (s, args) = Tr.CALL (Tr.NAME (Te.namedlabel s), args)
+
+    fun procEntryExit1 (frame, body) = body 
+    fun procEntryExit2 (frame, body) = body @ [A.OPER { assem = "", src = [ZERO, RA, SP] @ calleeSaves, dst = [], jump = SOME [] }]
+    fun procEntryExit3 ({ name, formals, locals, shift }, body) = { prolog = "PROCEDURE " ^ Symbol.name name ^ "\n", body = body, 
+                          epilog = "END " ^ Symbol.name name ^ "\n" }
 end

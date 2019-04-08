@@ -3,6 +3,8 @@
 Group is
 
     absyn.sml                           (* Contains the AST definition used in tiger.grm *)
+    assem.sml                           (* Contains datatype to represent MIPS assembly language code *)
+    codegen.sml                         (* Contains functions to convert IR into MIPS assembly code *)
     driver.sml                          (* Driver to run the parser on a given input file *)
     env.sml                             (* Defines the type to implement the symbol table for the Tiger and also defines the base symbol tables for types and functions *)
     errormsg.sml                        (* Contains ErrorMsg structure used for displaying error messages *)

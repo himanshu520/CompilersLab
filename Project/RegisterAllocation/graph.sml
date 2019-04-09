@@ -39,7 +39,7 @@ structure Graph : GRAPH = struct
     type graph = A.array
     type node = graph * node'
 
-    fun eq ((_, a), (_, b)) = a = b
+    fun eq ((_, a) : node, (_, b) : node) = a = b
     fun augment g n = (g, n)
     fun newGraph () = A.array (0, bogusNode)
 
@@ -63,15 +63,15 @@ structure Graph : GRAPH = struct
     exception GraphEdge
     fun check (g, g') = (* if g = g' then () else raise GraphEdge *) ()
 
-    fun delete (i, j::rest) = if i = j then rest else j::delete (i, rest)
+    fun delete (i : node', j::rest) = if i = j then rest else j::delete (i, rest)
     |   delete (_, nil) = raise GraphEdge
 
-    fun diddle_edge change { from = (g, i), to = (g', j) } = let val _ = check (g, g')
-                                                                 val NODE { succ = si, pred = pi } = A.sub (g, i)
-                                                                 val _ = A.update (g, i, NODE { succ = change (j, si), pred = pi })
-                                                                 val NODE { succ = sj, pred = pj } = A.sub (g, j)
-                                                                 val _ = A.update (g, j, NODE { succ = sj, pred = change (i, pj) })
-                                                             in () end
+    fun diddle_edge change { from = (g : graph, i), to = (g' : graph, j) } = let val _ = check (g, g')
+                                                                                 val NODE { succ = si, pred = pi } = A.sub (g, i)
+                                                                                 val _ = A.update (g, i, NODE { succ = change (j, si), pred = pi })
+                                                                                 val NODE { succ = sj, pred = pj } = A.sub (g, j)
+                                                                                 val _ = A.update (g, j, NODE { succ = sj, pred = change (i, pj) })
+                                                                             in () end
 
     val mk_edge = diddle_edge (op ::)
     val rm_edge = diddle_edge delete

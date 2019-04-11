@@ -1,0 +1,2 @@
+Skeleton 5
+d2f9d"Int"d"Flow"d"List"d"Mips"Cd"MakeGraph"ä¢MipsFrame"d"Semant"d"Liveness"d"String"Cd"Symbol"d"TextIO"d"Printtree"d"Assem"d"Canon"Cd"Color"d"Parse"d"ErrorMsg"d"FindEscape"d"IGraph"Nad"Main1"h3ad"Tr"gp1d"Translate"ad"F"gp1ÿ,ad"Te"gp1d"Temp"

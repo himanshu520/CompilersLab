@@ -1,0 +1,2 @@
+Skeleton 5
+d2f8d"Int"d"List"d"Temp"Cd"Semant"d"Symbol"d"TextIO"d"Assem"d"Canon"Cd"Parse"ä¢RegAlloc"d"ErrorMsg"d"FindEscape"d"Codegen"Nad"Main"h4ad"Tr"gp1d"Translate"aä¢Frame"gp1d"MipsFrame"ad"F"gp1ÿ‚ad"R"gp1ÿ

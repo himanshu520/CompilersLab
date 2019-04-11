@@ -1,0 +1,2 @@
+Skeleton 5
+d3f5Cd"List"d"Temp"d"MakeGraph"ä¢MipsFrame"d"Liveness"Cd"String"d"Assem"d"Color"d"ErrorMsg"d"Codegen"Naã¢REGALLOC"h1aä¢Frame"gp1c"FRAME"ad"RegAlloc"jh4aÿ5gp1ÿad"T"gp1d"Tree"ad"G"gp1d"Graph"ad"S"jh0gp1e"RedBlackSetFn"gp1ÿ'

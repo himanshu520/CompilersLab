@@ -1,0 +1,7 @@
+/*Program to compute the factorial, show let and loop, register allocation*/
+let var x := 10
+    var cnt := 1
+    var fact := 1
+in (while cnt <= x do
+       (fact := fact * cnt; cnt := cnt + 1); fact)
+end

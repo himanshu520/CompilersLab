@@ -1,0 +1,7 @@
+/*show while loop and variable register allocation*/
+
+let var x := 10
+    var y := 20
+in while x < y do
+       x := x + 1
+end

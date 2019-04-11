@@ -1,4 +1,0 @@
-let var x := 10
-    var y := 20
-in if x < y then x + 19 else 45
-end
